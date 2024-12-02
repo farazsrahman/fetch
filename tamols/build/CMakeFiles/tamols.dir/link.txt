@@ -1,2 +1,0 @@
-/Library/Developer/CommandLineTools/usr/bin/ar qc libtamols.a CMakeFiles/tamols.dir/src/tamols_state.cc.o CMakeFiles/tamols.dir/src/constraints.cc.o CMakeFiles/tamols.dir/src/helpers.cc.o
-/Library/Developer/CommandLineTools/usr/bin/ranlib libtamols.a

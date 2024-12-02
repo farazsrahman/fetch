@@ -1,6 +1,0 @@
-/Users/farazrahman/Documents/meamproj/tamols/build/CMakeFiles/tamols.dir
-/Users/farazrahman/Documents/meamproj/tamols/build/CMakeFiles/simple_example.dir
-/Users/farazrahman/Documents/meamproj/tamols/build/CMakeFiles/tamols_test.dir
-/Users/farazrahman/Documents/meamproj/tamols/build/CMakeFiles/test.dir
-/Users/farazrahman/Documents/meamproj/tamols/build/CMakeFiles/edit_cache.dir
-/Users/farazrahman/Documents/meamproj/tamols/build/CMakeFiles/rebuild_cache.dir
