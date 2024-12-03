@@ -7,6 +7,10 @@ from pydrake.all import cos, sin
 def evaluate_spline_position(tmls, coeffs, tau):
     return np.sum([coeffs[:, i] * tau**i for i in range(tmls.spline_order)], axis=0)
 
+def evaluate_spline_positions(tmls, coeffs, taus):
+    taus_powers = np.array([taus**i for i in range(tmls.spline_order)])
+    return np.sum(coeffs[:, :, np.newaxis] * taus_powers, axis=1).T
+
 def evaluate_spline_velocity(tmls, coeffs, tau, T):
     return np.sum([i * coeffs[:, i] * tau**(i - 1) / T for i in range(1, tmls.spline_order)], axis=0)
     

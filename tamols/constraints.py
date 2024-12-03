@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import numpy as np
 from pydrake.all import (
     cos, sin
@@ -13,8 +12,8 @@ from helpers import (
 
 
 
-# NOTE: I feel as though some of these operations could definitely be vectorized
-def add_initial_constraints(tmls: TAMOLSState):
+# NOTE: very fast even w for loops
+def add_initial_constraints(tmls: TAMOLSState, log: bool = False):
     """Add initial state constraints for base pose, velocity, and foot positions"""
     print("Adding initial constraints...")
 
@@ -24,7 +23,7 @@ def add_initial_constraints(tmls: TAMOLSState):
     a0 = tmls.spline_coeffs[0]  # First phase coefficients
     T0 = tmls.phase_durations[0]  # Duration of first phase
     
-    # Initial base pose constraint
+    # Initial constraints
     for dim in range(tmls.base_dims):
         tmls.prog.AddLinearConstraint(
             a0[dim,0] == tmls.base_pose[dim]
@@ -33,17 +32,15 @@ def add_initial_constraints(tmls: TAMOLSState):
             a0[dim,1] / T0 == tmls.base_vel[dim]
         )
     
-    # Initial foot positions constraint
-    for leg_idx in range(tmls.num_legs):
-        for dim in range(3):
-            tmls.prog.AddLinearConstraint(
-                tmls.p[leg_idx,dim] == tmls.p_meas[leg_idx,dim]
-            )
+    # for leg_idx in range(tmls.num_legs):
+    #     for dim in range(3):
+    #         tmls.prog.AddLinearConstraint(
+    #             tmls.p[leg_idx,dim] == tmls.p_meas[leg_idx,dim]
+    #         )
     
-    # Spline junction constraints
+    # Spline constraints
     num_phases = len(tmls.phase_durations)
     for phase in range(num_phases - 1):
-        # Get spline coefficients for adjacent phases
         ak = tmls.spline_coeffs[phase]      # Current phase
         ak1 = tmls.spline_coeffs[phase+1]   # Next phase
         Tk = tmls.phase_durations[phase]    # Current phase duration
@@ -144,7 +141,7 @@ def add_kinematic_constraints(tmls: TAMOLSState):
     Add kinematic feasibility constraints:
     - Leg length limits
     - Workspace constraints 
-    - Collision avoidance
+    - Collision avoidance (Not implemented)
     """
     print("Adding kinematic constraints...")
 
@@ -199,7 +196,7 @@ def add_kinematic_constraints(tmls: TAMOLSState):
                 
                 # Workspace constraints in world frame
                 tmls.prog.AddConstraint(
-                    p_foot[2] <= pos_B[2]  # Foot below base
+                    p_foot[2] <= pos_B[2] - .04  # Foot below bases
                 )
                 
                 # Additional workspace bounds
@@ -221,7 +218,8 @@ def add_kinematic_constraints(tmls: TAMOLSState):
                         leg_vector[i] <= max_val
                     )
                 
-                # tmls-collision avoidance between legs
+                # TODO: tmls-collision avoidance between legs
+                # NOTE: THIS IS FORMULATED AS A QUADRATIC BARRIER COST THOUGH????
                 for other_leg_idx in range(leg_idx + 1, tmls.num_legs):
                     other_p_foot = tmls.p[other_leg_idx]
                     min_distance = 0.1  # Minimum distance between feet
@@ -231,9 +229,10 @@ def add_kinematic_constraints(tmls: TAMOLSState):
                         p_foot[:2] - other_p_foot[:2]
                     )
                     
-                    # NOTE: makes problem infeasible :(
+
+                    # NOTE:gives warning about definiteness of this matrix ()
                     # tmls.prog.AddConstraint(
-                    #     foot_distance >= min_distance**2
+                    #     foot_distance >= min_distance**2,
                     # )
 
 def add_gait_constraints(tmls: TAMOLSState):

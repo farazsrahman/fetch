@@ -27,17 +27,17 @@ class TAMOLSState:
     # Physical parameters
     mass: float = 1.0
     mu: float = 0.7
-    inertia: np.ndarray = np.diag([0.07, 0.26, 0.242])
+    inertia: np.ndarray = field(default_factory=lambda: np.diag([0.07, 0.26, 0.242]))
 
     # Leg configuration
-    hip_offsets: np.ndarray = np.array([
+    hip_offsets: np.ndarray = field(default_factory=lambda: np.array([
         [0.2, 0.15, 0],
         [0.2, -0.15, 0],
         [-0.2, 0.15, 0],
         [-0.2, -0.15, 0],
-    ])
-    l_min: float = 0.2
-    l_max: float = 0.5
+    ]))
+    l_min: float = 0.08
+    l_max: float = 0.25
 
     # Current state
     p_meas: np.ndarray = None
@@ -72,7 +72,10 @@ class TAMOLSState:
 
     reference_trajectory: np.ndarray = None
     gait_pattern: Dict[str, List[Union[float, List[int]]]] = None
-
+    
+    # Internal variables
+    phase_durations: List[float] = None
+    
 
 # SETUP
 
@@ -90,10 +93,14 @@ def setup_variables(tmls: TAMOLSState):
     # Spline coefficients
     tmls.spline_coeffs = []
     for i in range(num_phases):
-        tmls.spline_coeffs.append(tmls.prog.NewContinuousVariables(
+        coeffs = tmls.prog.NewContinuousVariables(
             tmls.base_dims, tmls.spline_order, 
             f'a_{i}'
-        ))
+        )
+        tmls.spline_coeffs.append(coeffs)
+
+        # tmls.prog.SetInitialGuess(coeffs, np.random.randn(tmls.base_dims, tmls.spline_order))
+
     
     # Foothold plan
     tmls.p = tmls.prog.NewContinuousVariables(

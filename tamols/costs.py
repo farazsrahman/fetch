@@ -9,38 +9,6 @@ from helpers import (
     evaluate_height_gradient, evaluate_smoothed_height_gradient
 )
 
-def add_costs(tmls: TAMOLSState):
-    """Add all optimization cost terms"""
-    print("\nAdding costs...")
-
-    # 1. Robustness margin (using epsilon from dynamics constraints)
-    add_robustness_cost(tmls)
-    
-    # 2. Footholds on ground
-    add_foothold_ground_cost(tmls)
-    
-    # 3. Leg collision avoidance
-    add_leg_collision_cost(tmls)
-    
-    # 4. Nominal kinematics
-    add_nominal_kinematics_cost(tmls)
-    
-    # # 5. Base pose alignment with terrain
-    # add_base_alignment_cost(tmls)
-    
-    # # 6. Edge avoidance
-    # add_edge_avoidance_cost(tmls)
-    
-    # # 7. Previous solution tracking (if available)
-    # if hasattr(tmls, 'previous_solution'):
-    #     add_previous_solution_cost(tmls)
-        
-    # # 8. Reference trajectory tracking
-    # add_tracking_cost(tmls)
-    
-    # # 9. Smoothness (minimize angular momentum change)
-    # add_smoothness_cost(tmls)
-
 def add_robustness_cost(tmls: TAMOLSState):
     """Cost to maximize stability margin through epsilon"""
     print("Adding robustness cost...")
@@ -81,6 +49,12 @@ def add_leg_collision_cost(tmls: TAMOLSState):
             # use pydrake if_then_else to enforce barrier constraint
             cost_term = if_then_else(barrier > 0, w * barrier**2, 0)
             tmls.prog.AddCost(cost_term)
+
+
+
+
+
+    
         
 def add_nominal_kinematics_cost(tmls: TAMOLSState):
 
@@ -105,23 +79,23 @@ def add_nominal_kinematics_cost(tmls: TAMOLSState):
         theta = rpy_B[1]
         psi = rpy_B[2]
 
-        # Create the rotation matrix
-        R_B = np.array([
-            [cos(theta) * cos(psi),
-            sin(phi) * sin(theta) * cos(psi) - cos(phi) * sin(psi),
-            cos(phi) * sin(theta) * cos(psi) + sin(phi) * sin(psi)],
-            [cos(theta) * sin(psi),
-            sin(phi) * sin(theta) * sin(psi) + cos(phi) * cos(psi),
-            cos(phi) * sin(theta) * sin(psi) - sin(phi) * cos(psi)],
-            [-sin(theta),
-            sin(phi) * cos(theta),
-            cos(phi) * cos(theta)]
-        ])
+        # # Create the rotation matrix
+        # R_B = np.array([
+        #     [cos(theta) * cos(psi),
+        #     sin(phi) * sin(theta) * cos(psi) - cos(phi) * sin(psi),
+        #     cos(phi) * sin(theta) * cos(psi) + sin(phi) * sin(psi)],
+        #     [cos(theta) * sin(psi),
+        #     sin(phi) * sin(theta) * sin(psi) + cos(phi) * cos(psi),
+        #     cos(phi) * sin(theta) * sin(psi) - sin(phi) * cos(psi)],
+        #     [-sin(theta),
+        #     sin(phi) * cos(theta),
+        #     cos(phi) * cos(theta)]
+        # ])
         
-        print("R_B type: ", type(R_B))
-        print(f"R_B: {R_B}\n\n")
+        # print("R_B type: ", type(R_B))
+        # print(f"R_B: {R_B}\n\n")
 
-        print("RotationMatrix.ProjectToRotationMatrix: ", RotationMatrix.ProjectToRotationMatrix(R_B))
+        # print("RotationMatrix.ProjectToRotationMatrix: ", RotationMatrix.ProjectToRotationMatrix(R_B))
         
         
 
@@ -139,7 +113,37 @@ def add_nominal_kinematics_cost(tmls: TAMOLSState):
         #     tmls.prog.AddQuadraticCost(w * cost)
 
         break
-            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def add_base_alignment_cost(tmls: TAMOLSState):
     """Cost to align base with terrain"""
