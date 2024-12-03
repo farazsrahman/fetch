@@ -102,7 +102,6 @@ def add_dynamics_constraints(tmls: TAMOLSState):
                     (mu * e_z.dot(a_B))**2 >= (1 + eps)**2 * proj_acc.dot(proj_acc)
                 )
             
-
             # NOTE IN THESE DYNAMICS CONSTRAINTS WE MUST BE CAREFUL ABOUT 
             # WHETHER THE LEG POSITION IS FROM P or P_MEAS
             
@@ -142,7 +141,7 @@ def add_dynamics_constraints(tmls: TAMOLSState):
                     determinant(e_z, p_ij, M_i) >= 0
                 )
 
-            # NOTE: SKIP - USING TROT GAIT (NEVER 0 CONTACTS)
+            # SKIP - USING TROT GAIT (i.e. NEVER 0 CONTACTS)
             # elif N == 1:
             #     # Eq 17e: Single support constraint
             #     i = stance_feet[0]
