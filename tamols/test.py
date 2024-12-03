@@ -1,6 +1,5 @@
 import numpy as np
 import time
-from pydrake.all import MathematicalProgram, Solve
 from pydrake.solvers import SnoptSolver
 from tamols import TAMOLSState, setup_variables
 from constraints import (
@@ -20,36 +19,62 @@ from costs import (
     add_tracking_cost, 
     add_smoothness_cost
 )
-from helpers import evaluate_spline_position, evaluate_spline_positions
 
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from plotting_helpers import *
+
 
 
 def setup_test_state():
      # Create a TAMOLSState instance
     tmls = TAMOLSState()
     
-    tmls.base_pose = np.array([0, 0, 0.2, 0, 0, 0])  # Example initial base pose
+    tmls.base_pose = np.array([0, 0, 0.3, 0, 0, 0])  # Example initial base pose
     tmls.base_vel = np.array([0, 0, 0, 0, 0, 0])   # Example initial base velocity
-    tmls.p_meas = np.array([
-        [0.2, 0.1, 0],  # Front left leg
+    # tmls.p_meas = np.array([
+    #     [0.2, 0.1, 0],  # Front left leg
+    #     [0.2, -0.1, 0], # Front right leg
+    #     [-0.2, 0.1, 0], # Rear left leg
+    #     [-0.2, -0.1, 0] # Rear right leg
+    # ])  # Reasonable initial foot positions
+
+    # pathalogical
+     # - without dynamics accurately picking whether to look at p_meas or p this does not matter 
+    tmls.p_meas = np.array([ 
+        [0.2, 0.1, .05],  # Front left leg
         [0.2, -0.1, 0], # Front right leg
         [-0.2, 0.1, 0], # Rear left leg
-        [-0.2, -0.1, 0] # Rear right leg
-    ])  # Reasonable initial foot positions
+        [-0.2, -0.1, .05] # Rear right leg
+    ])  # mid movement foot positions
 
     tmls.height_map = np.zeros((30, 30))
     tmls.height_map_smoothed = np.zeros((30, 30))
     
+
     tmls.gait_pattern = {
-        'phase_timing': [0, 1, 2, 3],  # Example phase timings
+        'phase_timing': [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],  # Adjusted phase timings
         'contact_states': [
-            [1, 1, 1, 1],  # All legs in contact in phase 0
-            [1, 0, 1, 0],  # Alternating legs in contact in phase 1
-            [1, 1, 1, 1],  # All legs in contact in phase 2
-            [0, 1, 0, 1]   # Alternating legs in contact in phase 3
-        ]
+            [1, 1, 1, 1],
+            [1, 0, 1, 0],
+            [1, 0, 1, 0],
+            [1, 1, 1, 1],
+            [1, 1, 1, 1],
+            [0, 1, 0, 1],
+            [0, 1, 0, 1],
+            [1, 1, 1, 1]
+        ],
+        
+        # boolean array of whether the foot is at the final position in the i-th phase
+        # used to determine if p or p_meas should be used
+        'at_des_position': [
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 1, 0, 1],
+            [0, 1, 0, 1],
+            [0, 1, 0, 1],
+            [0, 1, 0, 1],
+            [1, 1, 1, 1]
+        ],
     }
 
     return tmls
@@ -66,35 +91,7 @@ def save_optimal_solutions(optimal_footsteps, optimal_spline_coeffs, num_phases,
                 np.savetxt(f, optimal_spline_coeffs[i], fmt='%.6f')
                 f.write("\n")
 
-def plot_optimal_solutions(optimal_footsteps, optimal_spline_coeffs, num_phases, tmls):
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
 
-    colors = ['r', 'g', 'b', 'y']
-    for i in range(optimal_footsteps.shape[0]):
-        ax.scatter(optimal_footsteps[i, 0], optimal_footsteps[i, 1], optimal_footsteps[i, 2], label=f'Footstep {i+1}', color=colors[i % len(colors)])
-
-    for i in range(num_phases):
-        T = tmls.phase_durations[i]
-        tau_values = np.linspace(0, 1, 100)
-
-        spline_points = evaluate_spline_positions(tmls, optimal_spline_coeffs[i], tau_values)
-        ax.plot(spline_points[:, 0], spline_points[:, 1], spline_points[:, 2], label=f'Spline Phase {i+1}', color=colors[i % len(colors)])
-        
-        # Add coordinate labels for the end of each spline with exact coordinates
-        ax.text(spline_points[-1, 0], spline_points[-1, 1], spline_points[-1, 2], 
-                f'End {i+1} ({spline_points[-1, 0]:.2f}, {spline_points[-1, 1]:.2f}, {spline_points[-1, 2]:.2f})', 
-                color=colors[i % len(colors)], fontsize=8)
-    ax.set_xlim([-1, 1])
-    ax.set_ylim([-1, 1])
-    ax.set_zlim([0, 1])
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-    ax.set_title('Optimal Base Pose and Footsteps')
-    ax.legend()
-    
-    plt.savefig('tamols/out/optimal_base_pose_and_footsteps.png')
 
 if __name__ == "__main__":
    
@@ -126,7 +123,7 @@ if __name__ == "__main__":
         num_phases = len(tmls.gait_pattern['phase_timing']) - 1
         optimal_spline_coeffs = [result.GetSolution(tmls.spline_coeffs[i]) for i in range(num_phases)]
 
-        plot_optimal_solutions(optimal_footsteps, optimal_spline_coeffs, num_phases, tmls)
+        plot_optimal_solutions_interactive(optimal_footsteps, optimal_spline_coeffs, num_phases, tmls)
 
         save_optimal_solutions(optimal_footsteps, optimal_spline_coeffs, num_phases)
 

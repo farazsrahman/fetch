@@ -37,6 +37,12 @@ def add_initial_constraints(tmls: TAMOLSState, log: bool = False):
     #         tmls.prog.AddLinearConstraint(
     #             tmls.p[leg_idx,dim] == tmls.p_meas[leg_idx,dim]
     #         )
+
+
+    # NOTE: HARD CODING FINAL POSITIONS
+    for leg_idx, pos in enumerate([[0.4, 0.1, 0], [0.4, -0.1, 0], [0, 0.1, 0], [0, -0.1, 0]]):
+        for dim in range(3):
+            tmls.prog.AddLinearConstraint(tmls.p[leg_idx, dim] == pos[dim])
     
     # Spline constraints
     num_phases = len(tmls.phase_durations)
@@ -74,9 +80,13 @@ def add_dynamics_constraints(tmls: TAMOLSState):
     for phase in range(num_phases):
         a_k = tmls.spline_coeffs[phase]
         T_k = tmls.phase_durations[phase]
+
+        p_at_des_pos = tmls.gait_pattern['at_des_position'][phase]
         
         N = get_num_contacts(tmls, phase)
-        stance_feet = get_stance_feet(tmls, phase)
+        stance_feet = get_stance_feet(tmls, phase) # returns the indices of the feet in contact (but does not account for p_meas vs p)
+        # TODO: add logic here to handle p_meas vs p
+
         eps = tmls.epsilon[phase]
         
         # Evaluate at pre-set waypoints
@@ -92,49 +102,60 @@ def add_dynamics_constraints(tmls: TAMOLSState):
                     (mu * e_z.dot(a_B))**2 >= (1 + eps)**2 * proj_acc.dot(proj_acc)
                 )
             
+
+            # NOTE IN THESE DYNAMICS CONSTRAINTS WE MUST BE CAREFUL ABOUT 
+            # WHETHER THE LEG POSITION IS FROM P or P_MEAS
+            
+ 
             if N >= 3: # Eq 17b: Multiple contact GIAC constraints
                 for i, j in get_contact_pairs(tmls, stance_feet):
-                    p_i = tmls.p[i]
-                    p_j = tmls.p[j]
+
+                    p_i = tmls.p[i] if p_at_des_pos[i] else tmls.p_meas[i]
+                    p_j = tmls.p[j] if p_at_des_pos[j] else tmls.p_meas[j]
                     p_ij = p_j - p_i
                     
+                    print(f"adding N={N} constraint 17b")
                     tmls.prog.AddConstraint(
                         m * determinant(p_ij, p_B - p_i, a_B) <= 
                         (1 + eps) * p_ij.dot(L_dot_B)
                     )
+                
                     
             elif N == 2: 
                 # Eq 17c,d: Double support constraints
                 i, j = stance_feet
-                p_i = tmls.p[i]
-                p_j = tmls.p[j]
+                p_i = tmls.p[i] if p_at_des_pos[i] else tmls.p_meas[i]
+                p_j = tmls.p[j] if p_at_des_pos[j] else tmls.p_meas[j]
                 p_ij = p_j - p_i
                 
                 # 17c: Equality constraint
+                print(f"adding N={N} constraint 17c")
                 tmls.prog.AddConstraint(
                     m * determinant(p_ij, p_B - p_i, a_B) == 
                     p_ij.dot(L_dot_B)
                 )
                 
                 # 17d: Moment constraint
+                print(f"adding N={N} constraint 17d")
                 M_i = m * np.cross(p_B - p_i, a_B) - L_dot_B
                 tmls.prog.AddConstraint(
                     determinant(e_z, p_ij, M_i) >= 0
                 )
+
+            # NOTE: SKIP - USING TROT GAIT (NEVER 0 CONTACTS)
+            # elif N == 1:
+            #     # Eq 17e: Single support constraint
+            #     i = stance_feet[0]
+            #     p_i = tmls.p[i] if p_at_des_pos[i] else tmls.p_meas[i]
                 
-            elif N == 1:
-                # Eq 17e: Single support constraint
-                i = stance_feet[0]
-                p_i = tmls.p[i]
-                
-                tmls.prog.AddConstraint(
-                    m * np.cross(p_B - p_i, a_B) == L_dot_B
-                )
-                
-            else:  # N == 0
-                # Eq 17f: Flight phase constraints
-                tmls.prog.AddConstraint(a_B == np.zeros(3))
-                tmls.prog.AddConstraint(L_dot_B == np.zeros(3))
+            #     tmls.prog.AddConstraint(
+            #         m * np.cross(p_B - p_i, a_B) == L_dot_B
+            #     )
+            
+            # else:  # N == 0
+            #     # Eq 17f: Flight phase constraints
+            #     tmls.prog.AddConstraint(a_B == np.zeros(3))
+            #     tmls.prog.AddConstraint(L_dot_B == np.zeros(3))
 
 def add_kinematic_constraints(tmls: TAMOLSState):
     """
