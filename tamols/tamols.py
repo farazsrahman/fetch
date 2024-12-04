@@ -3,11 +3,7 @@ import numpy as np
 from pydrake.all import (
     MathematicalProgram
 )
-from pydrake.math import RollPitchYaw, RotationMatrix
-from typing import List, Dict, Tuple, Union
-
-
-# STATE
+from typing import List, Dict, Union
 
 @dataclass
 class TAMOLSState:
@@ -77,40 +73,35 @@ class TAMOLSState:
     # Internal variables
     phase_durations: List[float] = None
     
-
-# SETUP
-
 def setup_variables(tmls: TAMOLSState):
     """Setup optimization variables based on gait phases"""
+
     tmls.prog = MathematicalProgram()
     
     phase_times = tmls.gait_pattern['phase_timing']
     num_phases = len(phase_times) - 1  # Number of intervals between timestamps
-    tmls.phase_durations = [
-        phase_times[i+1] - phase_times[i] 
-        for i in range(num_phases)
-    ]
+    tmls.phase_durations = [ phase_times[i+1] - phase_times[i] for i in range(num_phases) ]
 
-    # Spline coefficients
+    # Spline coefficients (26-27)
     tmls.spline_coeffs = []
     for i in range(num_phases):
         coeffs = tmls.prog.NewContinuousVariables(
-            tmls.base_dims, tmls.spline_order, 
+            tmls.base_dims, 
+            tmls.spline_order, 
             f'a_{i}'
         )
         tmls.spline_coeffs.append(coeffs)
 
     
-    # Foothold plan
+    # Foothold plan (27)
     tmls.p = tmls.prog.NewContinuousVariables(
         tmls.num_legs, 3, 
         'p'
     )
     
-    # Stability constraints slack variables
+    # Stability constraints slack variables (27)
     tmls.epsilon = tmls.prog.NewContinuousVariables(
         num_phases, 
         'epsilon'
     )
 
-# STATE UPDATE

@@ -1,25 +1,18 @@
 import numpy as np
-import time
 from pydrake.solvers import SnoptSolver
 from tamols import TAMOLSState, setup_variables
 from constraints import (
     add_initial_constraints, 
     add_dynamics_constraints, 
-    add_kinematic_constraints, 
-    add_gait_constraints
 )
 from costs import (
     add_tracking_cost, 
 )
-
 from plotting_helpers import *
 
-
-
-def setup_test_state():
+def setup_test_state(tmls: TAMOLSState):
      # Create a TAMOLSState instance
-    tmls = TAMOLSState()
-    
+
     tmls.base_pose = np.array([0, 0, 0.3, 0, 0, 0])  # Example initial base pose
     tmls.base_vel = np.array([0, 0, 0, 0, 0, 0])   # Example initial base velocity
     tmls.p_meas = np.array([
@@ -83,39 +76,27 @@ def setup_test_state():
         ],
     }
     
-    return tmls
-
-def save_optimal_solutions(optimal_footsteps, optimal_spline_coeffs, num_phases, filepath='tamols/out/optimal_solution.txt'):
-        with open(filepath, 'w') as f:
-            f.write("Optimal Footsteps:\n")
-            for i in range(optimal_footsteps.shape[0]):
-                f.write(f"Footstep {i+1}: {optimal_footsteps[i, 0]}, {optimal_footsteps[i, 1]}, {optimal_footsteps[i, 2]}\n")
-            
-            f.write("\nOptimal Spline Coefficients:\n")
-            for i in range(num_phases):
-                f.write(f"Spline Phase {i+1} Coefficients:\n")
-                np.savetxt(f, optimal_spline_coeffs[i], fmt='%.6f')
-                f.write("\n")
-
-
 
 if __name__ == "__main__":
-   
-    tmls = setup_test_state()
 
+    # SETUP
+    tmls = TAMOLSState()
+    setup_test_state(tmls)
     setup_variables(tmls)
-    
-    add_initial_constraints(tmls)
 
+    # test specifc - hard coding final foot holds
+    for leg_idx, pos in enumerate([[0.4, 0.1, 0], [0.4, -0.1, 0], [0, 0.1, 0], [0, -0.1, 0]]):
+        for dim in range(3):
+            tmls.prog.AddLinearConstraint(tmls.p[leg_idx, dim] == pos[dim])
+
+    # CONSTRAINTS
+    add_initial_constraints(tmls)
     add_dynamics_constraints(tmls)
     
-    # add_kinematic_constraints(tmls)
-
-    add_gait_constraints(tmls)
-
+    # COSTS
     add_tracking_cost(tmls)
 
-
+    # SOLVE
     solver = SnoptSolver()
     result = solver.Solve(tmls.prog)
     
@@ -123,15 +104,12 @@ if __name__ == "__main__":
     # Check if the problem is feasible
     if result.is_success():
         print("Optimization problem is feasible.")
-                
-        # Extract optimal footstep positions
-        optimal_footsteps = result.GetSolution(tmls.p); print(f"Optimal footsteps type: {type(optimal_footsteps)}, shape: {optimal_footsteps.shape}")
-        
+
+        optimal_footsteps = result.GetSolution(tmls.p)
         num_phases = len(tmls.gait_pattern['phase_timing']) - 1
         optimal_spline_coeffs = [result.GetSolution(tmls.spline_coeffs[i]) for i in range(num_phases)]
 
         plot_optimal_solutions_interactive(optimal_footsteps, optimal_spline_coeffs, num_phases, tmls)
-
         save_optimal_solutions(optimal_footsteps, optimal_spline_coeffs, num_phases)
 
     else:

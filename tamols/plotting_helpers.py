@@ -1,14 +1,8 @@
 import numpy as np
-
-from helpers import evaluate_spline_position, evaluate_spline_positions
-
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-
 import plotly.graph_objects as go
 
-from plotting_helpers import *
-
+from helpers import evaluate_spline_positions
 
 
 def plot_optimal_solutions_interactive(optimal_footsteps, optimal_spline_coeffs, num_phases, tmls):
@@ -147,6 +141,18 @@ def plot_optimal_solutions(optimal_footsteps, optimal_spline_coeffs, num_phases,
     ax.legend(loc='upper left', bbox_to_anchor=(1.05, 1), fontsize='small')
     
     plt.savefig('tamols/out/optimal_base_pose_and_footsteps.png')
+
+def save_optimal_solutions(optimal_footsteps, optimal_spline_coeffs, num_phases, filepath='tamols/out/optimal_solution.txt'):
+        with open(filepath, 'w') as f:
+            f.write("Optimal Footsteps:\n")
+            for i in range(optimal_footsteps.shape[0]):
+                f.write(f"Footstep {i+1}: {optimal_footsteps[i, 0]}, {optimal_footsteps[i, 1]}, {optimal_footsteps[i, 2]}\n")
+            
+            f.write("\nOptimal Spline Coefficients:\n")
+            for i in range(num_phases):
+                f.write(f"Spline Phase {i+1} Coefficients:\n")
+                np.savetxt(f, optimal_spline_coeffs[i], fmt='%.6f')
+                f.write("\n")
 
 
     

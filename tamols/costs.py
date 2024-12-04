@@ -1,7 +1,4 @@
 import numpy as np
-from pydrake.all import cos, sin
-from pydrake.math import RollPitchYaw, RotationMatrix, sin, cos
-from pydrake.symbolic import if_then_else, Expression
 from tamols import TAMOLSState
 from helpers import (
     evaluate_spline_position, evaluate_spline_velocity, 
