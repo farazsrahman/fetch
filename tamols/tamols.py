@@ -63,7 +63,7 @@ class TAMOLSState:
     # Desired configuration
     nominal_height: float = 0.4
     foot_radius: float = 0.02
-    min_foot_distance: float = 0.1
+    min_foot_distance: float = 0.02
     desired_height: float = 0.4
 
     ref_vel: np.ndarray = None

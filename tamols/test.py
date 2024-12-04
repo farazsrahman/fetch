@@ -7,6 +7,7 @@ from constraints import (
 )
 from costs import (
     add_tracking_cost, 
+    add_foot_collision_cost,
 )
 from plotting_helpers import *
 
@@ -86,7 +87,7 @@ if __name__ == "__main__":
 
     # test specifc - hard coding final foot holds
     for leg_idx, pos in enumerate([[0.4, 0.1, 0], [0.4, -0.1, 0], [0, 0.1, 0], [0, -0.1, 0]]):
-        for dim in range(3):
+        for dim in [2]: # only enforcing z-position
             tmls.prog.AddLinearConstraint(tmls.p[leg_idx, dim] == pos[dim])
 
     # CONSTRAINTS
@@ -95,6 +96,7 @@ if __name__ == "__main__":
     
     # COSTS
     add_tracking_cost(tmls)
+    add_foot_collision_cost(tmls)
 
     # SOLVE
     solver = SnoptSolver()
