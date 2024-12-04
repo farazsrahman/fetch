@@ -9,15 +9,7 @@ from constraints import (
     add_gait_constraints
 )
 from costs import (
-    add_robustness_cost, 
-    add_foothold_ground_cost, 
-    add_leg_collision_cost, 
-    add_nominal_kinematics_cost, 
-    add_base_alignment_cost, 
-    add_edge_avoidance_cost, 
-    add_previous_solution_cost, 
     add_tracking_cost, 
-    add_smoothness_cost
 )
 
 from plotting_helpers import *
@@ -30,26 +22,20 @@ def setup_test_state():
     
     tmls.base_pose = np.array([0, 0, 0.3, 0, 0, 0])  # Example initial base pose
     tmls.base_vel = np.array([0, 0, 0, 0, 0, 0])   # Example initial base velocity
-    # tmls.p_meas = np.array([
-    #     [0.2, 0.1, 0],  # Front left leg
-    #     [0.2, -0.1, 0], # Front right leg
-    #     [-0.2, 0.1, 0], # Rear left leg
-    #     [-0.2, -0.1, 0] # Rear right leg
-    # ])  # Reasonable initial foot positions
-
-    # pathalogical
-     # - without dynamics accurately picking whether to look at p_meas or p this does not matter 
-    tmls.p_meas = np.array([ 
-        [0.2, 0.1, .05],  # Front left leg
+    tmls.p_meas = np.array([
+        [0.2, 0.1, 0],  # Front left leg
         [0.2, -0.1, 0], # Front right leg
         [-0.2, 0.1, 0], # Rear left leg
-        [-0.2, -0.1, .05] # Rear right leg
-    ])  # mid movement foot positions
+        [-0.2, -0.1, 0] # Rear right leg
+    ])  # Reasonable initial foot positions
 
     tmls.height_map = np.zeros((30, 30))
     tmls.height_map_smoothed = np.zeros((30, 30))
-    
 
+    tmls.ref_vel = np.array([0.05, 0, 0])
+    tmls.ref_angular_momentum = np.array([0, 0, 0])
+
+    # double spline / phase
     tmls.gait_pattern = {
         'phase_timing': [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],  # Adjusted phase timings
         'contact_states': [
@@ -77,6 +63,26 @@ def setup_test_state():
         ],
     }
 
+    # single spline / phase
+    tmls.gait_pattern = {
+        'phase_timing': [0, 1.0, 2.0, 3.0, 4.0],  # Adjusted phase timings
+        'contact_states': [
+            [1, 1, 1, 1],
+            [1, 0, 1, 0],
+            [1, 1, 1, 1],
+            [0, 1, 0, 1],
+        ],
+        
+        # boolean array of whether the foot is at the final position in the i-th phase
+        # used to determine if p or p_meas should be used
+        'at_des_position': [
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 1, 0, 1],
+            [0, 1, 0, 1],
+        ],
+    }
+    
     return tmls
 
 def save_optimal_solutions(optimal_footsteps, optimal_spline_coeffs, num_phases, filepath='tamols/out/optimal_solution.txt'):
@@ -103,10 +109,11 @@ if __name__ == "__main__":
 
     add_dynamics_constraints(tmls)
     
-    add_kinematic_constraints(tmls)
+    # add_kinematic_constraints(tmls)
 
     add_gait_constraints(tmls)
 
+    add_tracking_cost(tmls)
 
 
     solver = SnoptSolver()

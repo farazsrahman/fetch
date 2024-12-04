@@ -81,11 +81,9 @@ def add_dynamics_constraints(tmls: TAMOLSState):
         a_k = tmls.spline_coeffs[phase]
         T_k = tmls.phase_durations[phase]
 
-        p_at_des_pos = tmls.gait_pattern['at_des_position'][phase]
-        
         N = get_num_contacts(tmls, phase)
         stance_feet = get_stance_feet(tmls, phase) # returns the indices of the feet in contact (but does not account for p_meas vs p)
-        # TODO: add logic here to handle p_meas vs p
+        p_at_des_pos = tmls.gait_pattern['at_des_position'][phase]
 
         eps = tmls.epsilon[phase]
         
@@ -98,13 +96,14 @@ def add_dynamics_constraints(tmls: TAMOLSState):
             if N > 0: # Eq 17a: Friction cone constraint - FIXED
                 proj = I_3 - np.outer(e_z, e_z)
                 proj_acc = proj @ a_B
+
+                print(f"adding N={N} constraint 17a")
                 tmls.prog.AddConstraint(
                     (mu * e_z.dot(a_B))**2 >= (1 + eps)**2 * proj_acc.dot(proj_acc)
                 )
             
             # NOTE IN THESE DYNAMICS CONSTRAINTS WE MUST BE CAREFUL ABOUT 
             # WHETHER THE LEG POSITION IS FROM P or P_MEAS
-            
  
             if N >= 3: # Eq 17b: Multiple contact GIAC constraints
                 for i, j in get_contact_pairs(tmls, stance_feet):
@@ -141,20 +140,11 @@ def add_dynamics_constraints(tmls: TAMOLSState):
                     determinant(e_z, p_ij, M_i) >= 0
                 )
 
-            # SKIP - USING TROT GAIT (i.e. NEVER 0 CONTACTS)
-            # elif N == 1:
-            #     # Eq 17e: Single support constraint
-            #     i = stance_feet[0]
-            #     p_i = tmls.p[i] if p_at_des_pos[i] else tmls.p_meas[i]
-                
-            #     tmls.prog.AddConstraint(
-            #         m * np.cross(p_B - p_i, a_B) == L_dot_B
-            #     )
-            
-            # else:  # N == 0
-            #     # Eq 17f: Flight phase constraints
-            #     tmls.prog.AddConstraint(a_B == np.zeros(3))
-            #     tmls.prog.AddConstraint(L_dot_B == np.zeros(3))
+            # SKIP N < 2 FOR NOW (i.e. NEVER < 2 CONTACTS)
+
+
+
+
 
 def add_kinematic_constraints(tmls: TAMOLSState):
     """

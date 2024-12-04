@@ -12,6 +12,7 @@ def evaluate_spline_positions(tmls, coeffs, taus):
     return np.sum(coeffs[:, :, np.newaxis] * taus_powers, axis=1).T
 
 def evaluate_spline_velocity(tmls, coeffs, tau, T):
+    # returns vel and euler rates (0:3 and 3:6 respectively)
     return np.sum([i * coeffs[:, i] * tau**(i - 1) / T for i in range(1, tmls.spline_order)], axis=0)
     
 def evaluate_spline_acceleration(tmls, coeffs, tau, T):

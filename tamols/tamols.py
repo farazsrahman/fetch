@@ -70,7 +70,8 @@ class TAMOLSState:
     min_foot_distance: float = 0.1
     desired_height: float = 0.4
 
-    reference_trajectory: np.ndarray = None
+    ref_vel: np.ndarray = None
+    ref_angular_momentum: np.ndarray = None
     gait_pattern: Dict[str, List[Union[float, List[int]]]] = None
     
     # Internal variables
@@ -98,8 +99,6 @@ def setup_variables(tmls: TAMOLSState):
             f'a_{i}'
         )
         tmls.spline_coeffs.append(coeffs)
-
-        # tmls.prog.SetInitialGuess(coeffs, np.random.randn(tmls.base_dims, tmls.spline_order))
 
     
     # Foothold plan
