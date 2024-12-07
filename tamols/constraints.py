@@ -8,7 +8,7 @@ from helpers import (
 )
 
 def add_initial_constraints(tmls: TAMOLSState, log: bool = False):
-    """Add initial state constraints for base pose, velocity, and foot positions"""
+    """Add initial and junction constraints on the spline coefficients"""
     print("Adding initial constraints...")
     if tmls.base_pose is None or tmls.p_meas is None or tmls.base_vel is None:
         raise ValueError("Initial state not set")
@@ -116,4 +116,55 @@ def add_dynamics_constraints(tmls: TAMOLSState):
                 )
 
             # SKIP N < 2 CASES FOR NOW
+
+def add_kinematic_constraints(tmls: TAMOLSState):
+    """Max distance between hip and foot"""
+    print("Adding kinematic constraints...")
+
+    for leg_idx in range(tmls.num_legs):
+        for phase_idx, at_des_pos in enumerate(tmls.gait_pattern['at_des_position']):
+            if at_des_pos[leg_idx]:
+                T_k = tmls.phase_durations[phase_idx]
+                for tau in np.linspace(0, T_k, tmls.tau_sampling_rate+1)[:tmls.tau_sampling_rate]:
+                    spline_pos = evaluate_spline_position(tmls, tmls.spline_coeffs[phase_idx], tau)[0:3]
+                    hip_location = spline_pos + tmls.hip_offsets[leg_idx]
+                    diff = tmls.p[leg_idx] - hip_location
+
+                    tmls.prog.AddQuadraticConstraint(
+                        diff.dot(diff),  # Quadratic expression
+                        0, # quadratic lower bound is a non-convex constraint SKIP for now?
+                        tmls.l_max**2
+                    )
+
+def add_giac_constraints(tmls: TAMOLSState):
+    """Enforce feet form a convex polygon"""
+    print("Adding GIAC constraints...")
+
+    # Get the final foot locations
+    # p_1 = tmls.p_meas[0]
+    # p_2 = tmls.p_meas[1]
+    # p_3 = tmls.p_meas[2]
+    # p_4 = tmls.p_meas[3]
+    p_1 = tmls.p[0]
+    p_2 = tmls.p[1]
+    p_3 = tmls.p[2]
+    p_4 = tmls.p[3]
+
+    # Constraint (p12 × p13) z-component ≤ 0 for p_meas
+    p_12 = p_2 - p_1
+    p_13 = p_3 - p_1
+    tmls.prog.AddConstraint(p_12[0] * p_13[1] - p_12[1] * p_13[0] <= 0)
+
+    # Constraint (p14 × p13) z-component ≤ 0 for p_meas
+    p_14 = p_4 - p_1
+    tmls.prog.AddConstraint(p_14[0] * p_13[1] - p_14[1] * p_13[0] <= 0)
+
+    # Constraint (p24 × p23) z-component ≤ 0 for p_meas
+    p_23 = p_3 - p_2
+    p_24 = p_4 - p_2
+    tmls.prog.AddConstraint(p_24[0] * p_23[1] - p_24[1] * p_23[0] <= 0)
+
+    # Constraint (p24 × p21) z-component ≤ 0 for p_meas
+    p_21 = p_1 - p_2
+    tmls.prog.AddConstraint(p_24[0] * p_21[1] - p_24[1] * p_21[0] <= 0)
 

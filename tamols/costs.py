@@ -1,5 +1,7 @@
 import numpy as np
 from tamols import TAMOLSState
+from pydrake.symbolic import if_then_else, Expression
+from pydrake.math import exp, abs, sqrt
 from helpers import (
     evaluate_spline_position, evaluate_spline_velocity, 
     evaluate_angular_momentum_derivative, evaluate_height_at_symbolic_xy,
@@ -7,6 +9,7 @@ from helpers import (
     get_stance_feet
 )
 from pydrake.symbolic import floor, ExtractVariablesFromExpression, Expression
+
 
 def add_tracking_cost(tmls: TAMOLSState):
     """Cost to track reference trajectory"""
@@ -26,9 +29,46 @@ def add_tracking_cost(tmls: TAMOLSState):
 
             for dim in range(3):
                 weight = 2 * T_k / tmls.tau_sampling_rate
-                total_cost += weight*(vel[dim] - tmls.ref_vel[dim])**2
-    
+                total_cost += weight * (vel[dim] - tmls.ref_vel[dim])**2
+
     tmls.prog.AddQuadraticCost(total_cost)
+   
+def add_foot_collision_cost(tmls: TAMOLSState):
+    print("Adding foot collision cost...")
+    raise NotImplementedError("add_foot_collision_cost is not yet implemented")
+
+#     num_legs = tmls.num_legs
+#     min_foot_distance = tmls.min_foot_distance
+#     total_cost = Expression(0)
+
+
+#     # test with leg 1 and 2
+#     distance = sqrt((tmls.p[0] - tmls.p[1]).dot(tmls.p[0] - tmls.p[1]) + 1e-6) 
+
+#     penalty = (distance - min_foot_distance)**2
+#     total_cost += penalty
+
+
+#     # for i in range(num_legs):
+#     #     for j in range(i + 1, num_legs):
+#     #         distance = np.linalg.norm(tmls.p[i] - tmls.p[j])
+#     #         penalty = if_then_else(distance > min_foot_distance, (distance - min_foot_distance)**2, 0)
+#     #         total_cost += penalty
+
+#     tmls.prog.AddCost(total_cost)
+
+def add_test_cost(tmls: TAMOLSState):
+    print("Adding test cost...")
+    total_cost = 0
+    num_legs = tmls.num_legs
+
+    footstep_1 = tmls.p[0]
+    target_point = np.array([0.5, 0.5, 0])
+    distance = np.linalg.norm(footstep_1 - target_point)
+    total_cost += distance**2 
+
+    tmls.prog.AddCost(total_cost)
+
 
 def add_foothold_on_ground_cost(tmls: TAMOLSState):
     """Cost to keep footholds on ground"""
@@ -130,4 +170,3 @@ def add_edge_avoidance_cost(tmls: TAMOLSState):
 
     tmls.prog.AddCost(total_cost)
 
-    

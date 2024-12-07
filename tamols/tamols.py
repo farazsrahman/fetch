@@ -1,8 +1,9 @@
 from dataclasses import dataclass, field
 import numpy as np
 from pydrake.all import (
-    MathematicalProgram
+    MathematicalProgram,
 )
+from pydrake.solvers import MathematicalProgramResult
 from typing import List, Dict, Union
 
 @dataclass
@@ -40,7 +41,7 @@ class TAMOLSState:
         [-0.2, -0.15, 0],
     ]))
     l_min: float = 0.08
-    l_max: float = 0.25
+    l_max: float = 0.6
     h_des: float = 0.15
 
     # Current state
@@ -68,16 +69,22 @@ class TAMOLSState:
     spline_coeffs: List[np.ndarray] = None
     p: np.ndarray = None
     epsilon: np.ndarray = None
+    
+    # Optimization results
+    result: MathematicalProgramResult = None
+    optimal_footsteps: np.ndarray = None
+    optimal_spline_coeffs: List[np.ndarray] = None
 
     # Desired configuration
     nominal_height: float = 0.4
     foot_radius: float = 0.02
-    min_foot_distance: float = 0.1
+    min_foot_distance: float = 1
     desired_height: float = 0.4
 
     ref_vel: np.ndarray = None
     ref_angular_momentum: np.ndarray = None
     gait_pattern: Dict[str, List[Union[float, List[int]]]] = None
+    num_phases: int = None # setup by setup_variables
     
     # Internal variables
     phase_durations: List[float] = None
@@ -88,12 +95,12 @@ def setup_variables(tmls: TAMOLSState):
     tmls.prog = MathematicalProgram()
     
     phase_times = tmls.gait_pattern['phase_timing']
-    num_phases = len(phase_times) - 1  # Number of intervals between timestamps
-    tmls.phase_durations = [ phase_times[i+1] - phase_times[i] for i in range(num_phases) ]
+    tmls.num_phases = len(phase_times) - 1  # Number of intervals between timestamps
+    tmls.phase_durations = [ phase_times[i+1] - phase_times[i] for i in range(tmls.num_phases) ]
 
     # Spline coefficients (26-27)
     tmls.spline_coeffs = []
-    for i in range(num_phases):
+    for i in range(tmls.num_phases):
         coeffs = tmls.prog.NewContinuousVariables(
             tmls.base_dims, 
             tmls.spline_order, 
@@ -110,7 +117,7 @@ def setup_variables(tmls: TAMOLSState):
     
     # Stability constraints slack variables (27)
     tmls.epsilon = tmls.prog.NewContinuousVariables(
-        num_phases, 
+        tmls.num_phases, 
         'epsilon'
     )
 

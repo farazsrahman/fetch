@@ -1,0 +1,29 @@
+# Ignore virtual environment directories
+env/
+venv/
+
+# Ignore output directory
+tamols/out/
+
+# Ignore Python cache files in all directories
+**/__pycache__/
+**/*.py[cod]
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore log files
+*.log
+
+# Ignore temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+*.orig
+*.save
