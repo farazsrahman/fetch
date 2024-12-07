@@ -12,8 +12,9 @@ class TAMOLSState:
     horizon_steps: int = 100
 
     # Height map data
-    height_map: np.ndarray = None
-    height_map_smoothed: np.ndarray = None
+    h: np.ndarray = None
+    h_s1: np.ndarray = None
+    h_s2: np.ndarray = None
 
     # Robot configuration
     num_legs: int = 4
@@ -34,6 +35,7 @@ class TAMOLSState:
     ]))
     l_min: float = 0.08
     l_max: float = 0.25
+    h_des: float = 0.15
 
     # Current state
     p_meas: np.ndarray = None
@@ -41,7 +43,7 @@ class TAMOLSState:
     base_vel: np.ndarray = None
 
     # Optimization hyper-parameters TODO
-    taus_to_check: List[float] = field(default_factory=lambda: [0.4, 0.9])
+    tau_sampling_rate: int = 6
     weights: Dict[str, float] = field(default_factory=lambda: {
         'robustness_margin': 1.0,
         'footholds_on_ground': 1.0,

@@ -3,7 +3,7 @@ from tamols import TAMOLSState
 from helpers import (
     get_num_contacts, get_stance_feet, get_contact_pairs, 
     evaluate_spline_position, evaluate_spline_acceleration, 
-    evaluate_angular_momentum_derivative, evaluate_height_at_xy, 
+    evaluate_angular_momentum_derivative, evaluate_height_at_symbolic_xy, 
     determinant
 )
 
@@ -21,7 +21,7 @@ def add_initial_constraints(tmls: TAMOLSState, log: bool = False):
             a0[dim,0] == tmls.base_pose[dim]
         )
         tmls.prog.AddLinearConstraint(
-            a0[dim,1] / T0 == tmls.base_vel[dim]
+            a0[dim,1] == tmls.base_vel[dim]
         )
 
     # SPLINE JUNCTION CONSTRAINTS
@@ -34,19 +34,19 @@ def add_initial_constraints(tmls: TAMOLSState, log: bool = False):
         
         for dim in range(tmls.base_dims):
             # Position continuity: evaluate end of current = start of next
-            pos_k = sum(ak[dim,i] for i in range(tmls.spline_order))  # τ = 1
+            pos_k = sum(ak[dim,i] * Tk**i for i in range(tmls.spline_order))  # τ = 1
             pos_k1 = ak1[dim,0]                                       # τ = 0
             tmls.prog.AddLinearConstraint(pos_k == pos_k1)
             
             # Velocity continuity
-            vel_k = sum(i * ak[dim,i] / Tk for i in range(1, tmls.spline_order))   # τ = 1
-            vel_k1 = ak1[dim,1] / Tk1                                              # τ = 0
+            vel_k = sum(i * ak[dim,i] * Tk**(i-1) for i in range(1, tmls.spline_order))   # τ = 1
+            vel_k1 = ak1[dim,1]                                              # τ = 0
             tmls.prog.AddLinearConstraint(vel_k == vel_k1)
 
     # NOTE: check if there need to be any intial conditions on feet
 
 def add_dynamics_constraints(tmls: TAMOLSState):
-    """Add GIAC stability constraints at mid-phase and end of each phase"""
+    """Add GIAC stability constraints at continuously sampled points"""
     print("Adding dynamics constraints...")
 
     # Constants
@@ -66,9 +66,9 @@ def add_dynamics_constraints(tmls: TAMOLSState):
 
         eps = tmls.epsilon[phase]
         
-        for tau in tmls.taus_to_check:
+        for tau in np.linspace(0, T_k, tmls.tau_sampling_rate+1)[:tmls.tau_sampling_rate]:
             p_B = evaluate_spline_position(tmls, a_k, tau)[:3]
-            a_B = evaluate_spline_acceleration(tmls, a_k, tau, T_k)
+            a_B = evaluate_spline_acceleration(tmls, a_k, tau)
             L_dot_B = evaluate_angular_momentum_derivative(tmls, tau)
             
             if N > 0: # Eq 17a: Friction cone constraint - FIXED
