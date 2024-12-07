@@ -1,6 +1,28 @@
 from scipy import ndimage
 import numpy as np
 
+def get_derivative_kernel():
+    """Get 1D 5-point central finite difference kernel for first derivative"""
+    # 1st order derivative kernel from equation (24)
+    return np.array([1, -8, 0, 8, -1]) / (12 * 0.04)
+
+def compute_gradients(height_map):
+    """
+    Compute gradients using 1D 5-point central finite difference kernel
+    Args:
+        height_map: 2D height map array
+    Returns:
+        gradient_x: Gradient in x direction
+        gradient_y: Gradient in y direction
+    """
+    kernel = get_derivative_kernel()
+    
+    # Compute first derivatives
+    gradient_x = ndimage.convolve1d(height_map, kernel, axis=1)
+    gradient_y = ndimage.convolve1d(height_map, kernel, axis=0)
+    
+    return gradient_x, gradient_y
+
 def process_height_maps(h_raw, sigma1=1.0, sigma2=2.0):
     """
     Process raw height map to generate h_s1 and h_s2 layers as described.
@@ -40,5 +62,11 @@ def process_height_maps(h_raw, sigma1=1.0, sigma2=2.0):
                 h_dilated[i, j] = np.max(neighborhood)
     
     h_s2 = ndimage.gaussian_filter(h_dilated, sigma=sigma2)
+
+    gradients = {
+        'h': compute_gradients(h_raw),
+        'h_s1': compute_gradients(h_s1),
+        'h_s2': compute_gradients(h_s2)
+    }
     
-    return h_s1, h_s2
+    return h_s1, h_s2, gradients

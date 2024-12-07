@@ -1,7 +1,7 @@
 import numpy as np
 from pydrake.all import cos, sin
 from pydrake.symbolic import if_then_else, Expression
-from pydrake.math import RollPitchYaw
+from pydrake.symbolic import cos, sin
 
 
 # SPLINE
@@ -83,8 +83,26 @@ def get_R_B(phi_B):
     # Create RollPitchYaw object from Euler angles
     # Note: RollPitchYaw expects [roll, pitch, yaw] = [phi, theta, psi]
     # So we need to reverse the order from [psi, theta, phi]
-    rpy = RollPitchYaw([phi_B[2], phi_B[1], phi_B[0]])
-    
-    # Get rotation matrix
-    R_B = rpy.ToRotationMatrix().matrix()
+    psi, theta, phi = phi_B  # [Yaw, Pitch, Roll]
+
+    # Define rotation matrices for each axis
+    R_z = np.array([
+        [cos(psi), -sin(psi), 0],
+        [sin(psi), cos(psi), 0],
+        [0, 0, 1]
+    ])
+    R_y = np.array([
+        [cos(theta), 0, sin(theta)],
+        [0, 1, 0],
+        [-sin(theta), 0, cos(theta)]
+    ])
+    R_x = np.array([
+        [1, 0, 0],
+        [0, cos(phi), -sin(phi)],
+        [0, sin(phi), cos(phi)]
+    ])
+
+    # Combine rotations (ZYX convention)
+    R_B = R_z @ R_y @ R_x
+
     return R_B

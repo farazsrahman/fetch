@@ -1,5 +1,6 @@
 import numpy as np
 from pydrake.solvers import SnoptSolver
+from pydrake.all import Solve
 from tamols import TAMOLSState, setup_variables
 from constraints import (
     add_initial_constraints, 
@@ -8,7 +9,9 @@ from constraints import (
 from costs import (
     add_tracking_cost, 
     add_foothold_on_ground_cost,
-    add_base_pose_alignment_cost
+    add_base_pose_alignment_cost,
+    add_nominal_kinematic_cost,
+    add_edge_avoidance_cost
 )
 from plotting_helpers import *
 from map_processing import *
@@ -43,12 +46,16 @@ def setup_test_state(tmls: TAMOLSState):
     # noise_amplitude = 0.005  # 5mm of noise
     # elevation_map += noise_amplitude * np.random.randn(grid_size, grid_size)
 
-    h_s1, h_s2 = process_height_maps(elevation_map)
+    h_s1, h_s2, gradients = process_height_maps(elevation_map)
 
     tmls.h = elevation_map
     # tmls.h = np.zeros((grid_size, grid_size))
     tmls.h_s1 = h_s1
     tmls.h_s2 = h_s2
+
+    tmls.h_grad_x, tmls.h_grad_y = gradients['h']
+    tmls.h_s1_grad_x, tmls.h_s1_grad_y = gradients['h_s1']
+    tmls.h_s2_grad_x, tmls.h_s2_grad_y = gradients['h_s2']
 
     tmls.ref_vel = np.array([0.05, 0, 0])
     tmls.ref_angular_momentum = np.array([0, 0, 0])
@@ -83,7 +90,7 @@ def setup_test_state(tmls: TAMOLSState):
 
     # single spline / phase
     tmls.gait_pattern = {
-        'phase_timing': [0, 1.0, 2.0, 3.0, 4.0, 5.0],  # Adjusted phase timings
+        'phase_timing': [0, 0.05, 0.50, 0.55, 1.00, 1.05],  # Adjusted phase timings
         'contact_states': [
             [1, 1, 1, 1],
             [1, 0, 1, 0],
@@ -123,12 +130,18 @@ if __name__ == "__main__":
     # COSTS
     add_tracking_cost(tmls)
     add_foothold_on_ground_cost(tmls)
-    add_base_pose_alignment_cost
+    add_nominal_kinematic_cost(tmls)
+    add_base_pose_alignment_cost(tmls)
+    add_edge_avoidance_cost(tmls)
 
     # SOLVE
     solver = SnoptSolver()
 
+    # tmls.prog.SetSolverOption(SnoptSolver().solver_id(), "Major feasibility tolerance", 100000000000)
+
+    print("Starting solve")
     result = solver.Solve(tmls.prog)
+    # result = Solve(tmls.prog)
     
     
     # Check if the problem is feasible
@@ -144,6 +157,7 @@ if __name__ == "__main__":
 
     else:
         print("Optimization problem is not feasible.")
+        print("Solver result code:", result.GetInfeasibleConstraints(tmls.prog))
 
     # Create meshgrid for 3D plotting
     x = np.arange(0, 24)
