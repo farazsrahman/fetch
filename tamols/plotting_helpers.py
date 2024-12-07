@@ -115,7 +115,7 @@ def plot_optimal_solutions_interactive(tmls: TAMOLSState):
         )
     )
     # Save as HTML file for interactive viewing
-    fig.write_html('tamols/out/interactive_optimal_base_pose_and_footsteps.html')
+    fig.write_html('out/interactive_optimal_base_pose_and_footsteps.html')
 
 def plot_optimal_solutions(tmls: TAMOLSState):
     optimal_footsteps = tmls.optimal_footsteps
@@ -152,7 +152,7 @@ def plot_optimal_solutions(tmls: TAMOLSState):
     plt.savefig('out/optimal_base_pose_and_footsteps.png')
 
 
-def save_optimal_solutions(tmls: TAMOLSState, filepath='tamols/out/optimal_solution.txt'):
+def save_optimal_solutions(tmls: TAMOLSState, filepath='out/optimal_solution.txt'):
     optimal_footsteps = tmls.optimal_footsteps
     optimal_spline_coeffs = tmls.optimal_spline_coeffs
     num_phases = tmls.num_phases

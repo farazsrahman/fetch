@@ -1,111 +1,111 @@
 Optimal Footsteps:
-Footstep 1: -0.027397833266822057, -0.03776390160455777, 0.0
-Footstep 2: -0.19999970137090173, 0.10000065007578417, 0.0
-Footstep 3: -0.014054774065369419, -0.03968765160492618, 0.0
-Footstep 4: -0.1999984493418348, 0.10000030349571583, 0.0
+Footstep 1: 0.20068822990387622, 0.1427818175746462, 0.0
+Footstep 2: 0.20131817707012026, -0.153551510247134, 0.0
+Footstep 3: -0.1979206006845341, 0.14184096254358364, 0.0
+Footstep 4: -0.19931049403914525, -0.1534709647698942, 0.0
 
 Optimal Spline Coefficients:
 Spline Phase 1 Coefficients:
-0.000000 0.000000 0.000086 -0.001891 0.015732
-0.000000 0.000000 -0.000043 0.000963 -0.008158
-0.300000 0.000000 0.000129 -0.003173 0.027893
-0.000000 0.000000 0.275201 0.020068 0.000000
+0.000000 0.000000 0.000012 0.000001 -0.000000
+0.000000 0.000000 -0.000006 -0.000000 0.000000
+0.150000 0.000000 0.000009 0.000001 -0.000000
 0.000000 0.000000 0.000000 0.000000 0.000000
-0.000000 0.000000 -0.107420 -0.007679 0.000000
+0.000000 0.000000 0.000000 0.000000 0.000000
+0.000000 0.000000 0.000000 0.000000 0.000000
 
 Spline Phase 2 Coefficients:
-0.000000 0.000002 0.690077 -0.671093 -0.364298
--0.000000 -0.000001 0.345039 -0.335546 -0.182150
-0.300000 0.000003 -1.035116 1.006639 0.546448
-0.000691 0.027671 0.486915 -0.072947 -0.162954
+0.000000 0.000001 0.000180 -0.001454 0.001995
+-0.000000 -0.000001 0.000090 -0.000727 0.000997
+0.150000 0.000001 -0.000135 0.001091 -0.001496
 0.000000 0.000000 0.000000 0.000000 0.000000
--0.000270 -0.010800 0.002979 0.107515 0.077171
+0.000000 0.000000 0.000000 0.000000 0.000000
+0.000000 0.000000 0.000000 0.000000 0.000000
 
 Spline Phase 3 Coefficients:
-0.063650 0.080596 0.000001 0.000410 -0.004865
-0.031824 0.040296 -0.000000 -0.000587 0.007031
-0.204528 -0.120887 0.000001 -0.000073 0.000912
-0.098413 0.362183 -0.121195 -0.009351 0.000000
+-0.000014 0.000006 0.000034 0.000002 0.000000
+-0.000007 0.000002 -0.000017 -0.000022 0.000251
+0.150011 -0.000003 0.000025 0.000002 0.000000
 0.000000 0.000000 0.000000 0.000000 0.000000
-0.008436 0.085326 0.015710 0.000000 0.000000
+0.000000 0.000000 0.000000 0.000000 0.000000
+0.000000 0.000000 0.000000 0.000000 0.000000
 
 Spline Phase 4 Coefficients:
-0.067680 0.080597 0.000000 -0.000000 0.000000
-0.033839 0.040295 -0.000000 0.000000 0.000000
-0.198484 -0.120887 -0.000000 0.000000 -0.000000
-0.116218 0.349993 -0.551798 -0.256974 -0.107550
+-0.000013 0.000010 0.007070 0.014958 -0.027170
+-0.000007 0.000000 -0.039975 -0.028898 0.083075
+0.150011 -0.000001 -0.039056 -0.028234 0.081161
 0.000000 0.000000 0.000000 0.000000 0.000000
-0.012741 0.086897 -0.026169 -0.042418 -0.027715
+0.000000 0.000000 0.000000 0.000000 0.000000
+0.000000 0.000000 0.000000 0.000000 0.000000
 
 Spline Phase 5 Coefficients:
-0.103948 0.080597 -0.000000 0.000000 0.000000
-0.051971 0.040295 0.000000 -0.000000 0.000000
-0.144085 -0.120888 0.000000 0.000000 0.000000
-0.134149 -0.341939 0.000000 0.000000 0.000000
+0.001672 0.005557 0.000035 0.000766 0.000000
+-0.007329 -0.023252 -0.000025 -0.000566 0.000000
+0.142857 -0.022719 -0.000025 0.000000 0.000000
 0.000000 0.000000 0.000000 0.000000 0.000000
-0.041544 0.027473 0.000000 0.000000 0.000000
+0.000000 0.000000 0.000000 0.000000 0.000000
+0.000000 0.000000 0.000000 0.000000 0.000000
 
 
 Objective Function Optimal Value:
-Optimal Value: 0.049131
+Optimal Value: 0.041241
 
 Reference Velocity:
 Reference Velocity: [0.1 0.  0. ]
 
 Foot Distances and Associated Costs:
-Foot 1 to 2: 0.220840
-Foot 1 to 3: 0.013481
-Foot 1 to 4: 0.220839
-Foot 2 to 3: 0.232569
-Foot 2 to 4: 0.000001
-Foot 3 to 4: 0.232568
+Foot 1 to 2: 0.296334
+Foot 1 to 3: 0.398610
+Foot 1 to 4: 0.497760
+Foot 2 to 3: 0.496637
+Foot 2 to 4: 0.400629
+Foot 3 to 4: 0.295315
 
 Distance between leg index and hip location for kinematic constraints:
-Leg 1, Phase 5, Tau 0.00: Distance = 0.520461, Actual Foot Location = [-0.02739783 -0.0377639   0.        ], Hip Location = [ 0.45867445  0.13261351 -0.0747323 ]
-Leg 1, Phase 5, Tau 0.17: Distance = 0.536074, Actual Foot Location = [-0.02739783 -0.0377639   0.        ], Hip Location = [ 0.47516083  0.13416217 -0.07246476]
-Leg 1, Phase 5, Tau 0.33: Distance = 0.551752, Actual Foot Location = [-0.02739783 -0.0377639   0.        ], Hip Location = [ 0.49164984  0.13570769 -0.07019679]
-Leg 1, Phase 5, Tau 0.50: Distance = 0.567489, Actual Foot Location = [-0.02739783 -0.0377639   0.        ], Hip Location = [ 0.50813889  0.13725125 -0.06792838]
-Leg 1, Phase 5, Tau 0.67: Distance = 0.583279, Actual Foot Location = [-0.02739783 -0.0377639   0.        ], Hip Location = [ 0.5246266   0.13879302 -0.06565952]
-Leg 1, Phase 5, Tau 0.83: Distance = 0.599117, Actual Foot Location = [-0.02739783 -0.0377639   0.        ], Hip Location = [ 0.54111274  0.14033216 -0.06339019]
-Leg 2, Phase 3, Tau 0.00: Distance = 0.585180, Actual Foot Location = [-0.1999997   0.10000065  0.        ], Hip Location = [ 0.3071575  -0.18199272  0.07554587]
-Leg 2, Phase 3, Tau 0.17: Distance = 0.592783, Actual Foot Location = [-0.1999997   0.10000065  0.        ], Hip Location = [ 0.31879453 -0.17990194  0.06244077]
-Leg 2, Phase 3, Tau 0.33: Distance = 0.600069, Actual Foot Location = [-0.1999997   0.10000065  0.        ], Hip Location = [ 0.3296679  -0.17786958  0.04820341]
-Leg 2, Phase 3, Tau 0.50: Distance = 0.607758, Actual Foot Location = [-0.1999997   0.10000065  0.        ], Hip Location = [ 0.34049437 -0.17584357  0.03385494]
-Leg 2, Phase 3, Tau 0.67: Distance = 0.615966, Actual Foot Location = [-0.1999997   0.10000065  0.        ], Hip Location = [ 0.35145812 -0.17375158  0.01919742]
-Leg 2, Phase 3, Tau 0.83: Distance = 0.624341, Actual Foot Location = [-0.1999997   0.10000065  0.        ], Hip Location = [ 0.36221079 -0.17150101  0.00281378]
-Leg 2, Phase 4, Tau 0.00: Distance = 0.632225, Actual Foot Location = [-0.1999997   0.10000065  0.        ], Hip Location = [ 0.37187151 -0.16897901 -0.01793214]
-Leg 2, Phase 4, Tau 0.17: Distance = 0.641372, Actual Foot Location = [-0.1999997   0.10000065  0.        ], Hip Location = [ 0.38189124 -0.16685216 -0.03937609]
-Leg 2, Phase 4, Tau 0.33: Distance = 0.653534, Actual Foot Location = [-0.1999997   0.10000065  0.        ], Hip Location = [ 0.39437823 -0.1659616  -0.05555354]
-Leg 2, Phase 4, Tau 0.50: Distance = 0.667905, Actual Foot Location = [-0.1999997   0.10000065  0.        ], Hip Location = [ 0.40892712 -0.16618982 -0.06669292]
-Leg 2, Phase 4, Tau 0.67: Distance = 0.683591, Actual Foot Location = [-0.1999997   0.10000065  0.        ], Hip Location = [ 0.42498475 -0.16708428 -0.07319366]
-Leg 2, Phase 4, Tau 0.83: Distance = 0.699599, Actual Foot Location = [-0.1999997   0.10000065  0.        ], Hip Location = [ 0.44185013 -0.16785739 -0.07562628]
-Leg 2, Phase 5, Tau 0.00: Distance = 0.714795, Actual Foot Location = [-0.1999997   0.10000065  0.        ], Hip Location = [ 0.45867445 -0.16738649 -0.0747323 ]
-Leg 2, Phase 5, Tau 0.17: Distance = 0.729221, Actual Foot Location = [-0.1999997   0.10000065  0.        ], Hip Location = [ 0.47516083 -0.16583783 -0.07246476]
-Leg 2, Phase 5, Tau 0.33: Distance = 0.743746, Actual Foot Location = [-0.1999997   0.10000065  0.        ], Hip Location = [ 0.49164984 -0.16429231 -0.07019679]
-Leg 2, Phase 5, Tau 0.50: Distance = 0.758361, Actual Foot Location = [-0.1999997   0.10000065  0.        ], Hip Location = [ 0.50813889 -0.16274875 -0.06792838]
-Leg 2, Phase 5, Tau 0.67: Distance = 0.773061, Actual Foot Location = [-0.1999997   0.10000065  0.        ], Hip Location = [ 0.5246266  -0.16120698 -0.06565952]
-Leg 2, Phase 5, Tau 0.83: Distance = 0.787841, Actual Foot Location = [-0.1999997   0.10000065  0.        ], Hip Location = [ 0.54111274 -0.15966784 -0.06339019]
-Leg 3, Phase 5, Tau 0.00: Distance = 0.201400, Actual Foot Location = [-0.01405477 -0.03968765  0.        ], Hip Location = [ 0.05867445  0.13261351 -0.0747323 ]
-Leg 3, Phase 5, Tau 0.17: Distance = 0.208409, Actual Foot Location = [-0.01405477 -0.03968765  0.        ], Hip Location = [ 0.07516083  0.13416217 -0.07246476]
-Leg 3, Phase 5, Tau 0.33: Distance = 0.216482, Actual Foot Location = [-0.01405477 -0.03968765  0.        ], Hip Location = [ 0.09164984  0.13570769 -0.07019679]
-Leg 3, Phase 5, Tau 0.50: Distance = 0.225506, Actual Foot Location = [-0.01405477 -0.03968765  0.        ], Hip Location = [ 0.10813889  0.13725125 -0.06792838]
-Leg 3, Phase 5, Tau 0.67: Distance = 0.235370, Actual Foot Location = [-0.01405477 -0.03968765  0.        ], Hip Location = [ 0.1246266   0.13879302 -0.06565952]
-Leg 3, Phase 5, Tau 0.83: Distance = 0.245972, Actual Foot Location = [-0.01405477 -0.03968765  0.        ], Hip Location = [ 0.14111274  0.14033216 -0.06339019]
-Leg 4, Phase 3, Tau 0.00: Distance = 0.310982, Actual Foot Location = [-0.19999845  0.1000003   0.        ], Hip Location = [-0.0928425  -0.18199272  0.07554587]
-Leg 4, Phase 3, Tau 0.17: Distance = 0.310412, Actual Foot Location = [-0.19999845  0.1000003   0.        ], Hip Location = [-0.08120547 -0.17990194  0.06244077]
-Leg 4, Phase 3, Tau 0.33: Distance = 0.310401, Actual Foot Location = [-0.19999845  0.1000003   0.        ], Hip Location = [-0.0703321  -0.17786958  0.04820341]
-Leg 4, Phase 3, Tau 0.50: Distance = 0.311407, Actual Foot Location = [-0.19999845  0.1000003   0.        ], Hip Location = [-0.05950563 -0.17584357  0.03385494]
-Leg 4, Phase 3, Tau 0.67: Distance = 0.313445, Actual Foot Location = [-0.19999845  0.1000003   0.        ], Hip Location = [-0.04854188 -0.17375158  0.01919742]
-Leg 4, Phase 3, Tau 0.83: Distance = 0.316279, Actual Foot Location = [-0.19999845  0.1000003   0.        ], Hip Location = [-0.03778921 -0.17150101  0.00281378]
-Leg 4, Phase 4, Tau 0.00: Distance = 0.319704, Actual Foot Location = [-0.19999845  0.1000003   0.        ], Hip Location = [-0.02812849 -0.16897901 -0.01793214]
-Leg 4, Phase 4, Tau 0.17: Distance = 0.325338, Actual Foot Location = [-0.19999845  0.1000003   0.        ], Hip Location = [-0.01810876 -0.16685216 -0.03937609]
-Leg 4, Phase 4, Tau 0.33: Distance = 0.334072, Actual Foot Location = [-0.19999845  0.1000003   0.        ], Hip Location = [-0.00562177 -0.1659616  -0.05555354]
-Leg 4, Phase 4, Tau 0.50: Distance = 0.344899, Actual Foot Location = [-0.19999845  0.1000003   0.        ], Hip Location = [ 0.00892712 -0.16618982 -0.06669292]
-Leg 4, Phase 4, Tau 0.67: Distance = 0.356804, Actual Foot Location = [-0.19999845  0.1000003   0.        ], Hip Location = [ 0.02498475 -0.16708428 -0.07319366]
-Leg 4, Phase 4, Tau 0.83: Distance = 0.368725, Actual Foot Location = [-0.19999845  0.1000003   0.        ], Hip Location = [ 0.04185013 -0.16785739 -0.07562628]
-Leg 4, Phase 5, Tau 0.00: Distance = 0.379463, Actual Foot Location = [-0.19999845  0.1000003   0.        ], Hip Location = [ 0.05867445 -0.16738649 -0.0747323 ]
-Leg 4, Phase 5, Tau 0.17: Distance = 0.389402, Actual Foot Location = [-0.19999845  0.1000003   0.        ], Hip Location = [ 0.07516083 -0.16583783 -0.07246476]
-Leg 4, Phase 5, Tau 0.33: Distance = 0.399796, Actual Foot Location = [-0.19999845  0.1000003   0.        ], Hip Location = [ 0.09164984 -0.16429231 -0.07019679]
-Leg 4, Phase 5, Tau 0.50: Distance = 0.410609, Actual Foot Location = [-0.19999845  0.1000003   0.        ], Hip Location = [ 0.10813889 -0.16274875 -0.06792838]
-Leg 4, Phase 5, Tau 0.67: Distance = 0.421808, Actual Foot Location = [-0.19999845  0.1000003   0.        ], Hip Location = [ 0.1246266  -0.16120698 -0.06565952]
-Leg 4, Phase 5, Tau 0.83: Distance = 0.433362, Actual Foot Location = [-0.19999845  0.1000003   0.        ], Hip Location = [ 0.14111274 -0.15966784 -0.06339019]
+Leg 1, Phase 5, Tau 0.00: Distance = 0.142861, Actual Foot Location = [0.20068823 0.14278182 0.        ], Hip Location = [0.2016717  0.14267097 0.14285745]
+Leg 1, Phase 5, Tau 0.01: Distance = 0.142672, Actual Foot Location = [0.20068823 0.14278182 0.        ], Hip Location = [0.201718   0.1424772  0.14266812]
+Leg 1, Phase 5, Tau 0.02: Distance = 0.142484, Actual Foot Location = [0.20068823 0.14278182 0.        ], Hip Location = [0.20176432 0.14228342 0.14247879]
+Leg 1, Phase 5, Tau 0.03: Distance = 0.142296, Actual Foot Location = [0.20068823 0.14278182 0.        ], Hip Location = [0.20181064 0.14208964 0.14228945]
+Leg 1, Phase 5, Tau 0.03: Distance = 0.142108, Actual Foot Location = [0.20068823 0.14278182 0.        ], Hip Location = [0.20185698 0.14189584 0.14210011]
+Leg 1, Phase 5, Tau 0.04: Distance = 0.141920, Actual Foot Location = [0.20068823 0.14278182 0.        ], Hip Location = [0.20190333 0.14170204 0.14191077]
+Leg 2, Phase 3, Tau 0.00: Distance = 0.150059, Actual Foot Location = [ 0.20131818 -0.15355151  0.        ], Hip Location = [ 0.19998622 -0.15000746  0.15001119]
+Leg 2, Phase 3, Tau 0.01: Distance = 0.150059, Actual Foot Location = [ 0.20131818 -0.15355151  0.        ], Hip Location = [ 0.19998628 -0.15000744  0.15001117]
+Leg 2, Phase 3, Tau 0.02: Distance = 0.150059, Actual Foot Location = [ 0.20131818 -0.15355151  0.        ], Hip Location = [ 0.19998634 -0.15000743  0.15001115]
+Leg 2, Phase 3, Tau 0.03: Distance = 0.150059, Actual Foot Location = [ 0.20131818 -0.15355151  0.        ], Hip Location = [ 0.1999864  -0.15000742  0.15001113]
+Leg 2, Phase 3, Tau 0.03: Distance = 0.150059, Actual Foot Location = [ 0.20131818 -0.15355151  0.        ], Hip Location = [ 0.19998647 -0.15000741  0.15001112]
+Leg 2, Phase 3, Tau 0.04: Distance = 0.150059, Actual Foot Location = [ 0.20131818 -0.15355151  0.        ], Hip Location = [ 0.19998655 -0.15000741  0.15001111]
+Leg 2, Phase 4, Tau 0.00: Distance = 0.150059, Actual Foot Location = [ 0.20131818 -0.15355151  0.        ], Hip Location = [ 0.19998663 -0.1500074   0.1500111 ]
+Leg 2, Phase 4, Tau 0.07: Distance = 0.149824, Actual Foot Location = [ 0.20131818 -0.15355151  0.        ], Hip Location = [ 0.20003259 -0.1502418   0.14978203]
+Leg 2, Phase 4, Tau 0.15: Distance = 0.149105, Actual Foot Location = [ 0.20131818 -0.15355151  0.        ], Hip Location = [ 0.20018392 -0.15096227  0.14907807]
+Leg 2, Phase 4, Tau 0.22: Distance = 0.147929, Actual Foot Location = [ 0.20131818 -0.15355151  0.        ], Hip Location = [ 0.20044753 -0.15214734  0.14792021]
+Leg 2, Phase 4, Tau 0.30: Distance = 0.146392, Actual Foot Location = [ 0.20131818 -0.15355151  0.        ], Hip Location = [ 0.2008097  -0.15371243  0.14639104]
+Leg 2, Phase 4, Tau 0.38: Distance = 0.144648, Actual Foot Location = [ 0.20131818 -0.15355151  0.        ], Hip Location = [ 0.20123609 -0.15550991  0.14463483]
+Leg 2, Phase 5, Tau 0.00: Distance = 0.142908, Actual Foot Location = [ 0.20131818 -0.15355151  0.        ], Hip Location = [ 0.2016717  -0.15732903  0.14285745]
+Leg 2, Phase 5, Tau 0.01: Distance = 0.142724, Actual Foot Location = [ 0.20131818 -0.15355151  0.        ], Hip Location = [ 0.201718   -0.1575228   0.14266812]
+Leg 2, Phase 5, Tau 0.02: Distance = 0.142540, Actual Foot Location = [ 0.20131818 -0.15355151  0.        ], Hip Location = [ 0.20176432 -0.15771658  0.14247879]
+Leg 2, Phase 5, Tau 0.03: Distance = 0.142357, Actual Foot Location = [ 0.20131818 -0.15355151  0.        ], Hip Location = [ 0.20181064 -0.15791036  0.14228945]
+Leg 2, Phase 5, Tau 0.03: Distance = 0.142174, Actual Foot Location = [ 0.20131818 -0.15355151  0.        ], Hip Location = [ 0.20185698 -0.15810416  0.14210011]
+Leg 2, Phase 5, Tau 0.04: Distance = 0.141991, Actual Foot Location = [ 0.20131818 -0.15355151  0.        ], Hip Location = [ 0.20190333 -0.15829796  0.14191077]
+Leg 3, Phase 5, Tau 0.00: Distance = 0.142860, Actual Foot Location = [-0.1979206   0.14184096  0.        ], Hip Location = [-0.1983283   0.14267097  0.14285745]
+Leg 3, Phase 5, Tau 0.01: Distance = 0.142670, Actual Foot Location = [-0.1979206   0.14184096  0.        ], Hip Location = [-0.198282    0.1424772   0.14266812]
+Leg 3, Phase 5, Tau 0.02: Distance = 0.142480, Actual Foot Location = [-0.1979206   0.14184096  0.        ], Hip Location = [-0.19823568  0.14228342  0.14247879]
+Leg 3, Phase 5, Tau 0.03: Distance = 0.142290, Actual Foot Location = [-0.1979206   0.14184096  0.        ], Hip Location = [-0.19818936  0.14208964  0.14228945]
+Leg 3, Phase 5, Tau 0.03: Distance = 0.142100, Actual Foot Location = [-0.1979206   0.14184096  0.        ], Hip Location = [-0.19814302  0.14189584  0.14210011]
+Leg 3, Phase 5, Tau 0.04: Distance = 0.141911, Actual Foot Location = [-0.1979206   0.14184096  0.        ], Hip Location = [-0.19809667  0.14170204  0.14191077]
+Leg 4, Phase 3, Tau 0.00: Distance = 0.150053, Actual Foot Location = [-0.19931049 -0.15347096  0.        ], Hip Location = [-0.20001378 -0.15000746  0.15001119]
+Leg 4, Phase 3, Tau 0.01: Distance = 0.150053, Actual Foot Location = [-0.19931049 -0.15347096  0.        ], Hip Location = [-0.20001372 -0.15000744  0.15001117]
+Leg 4, Phase 3, Tau 0.02: Distance = 0.150053, Actual Foot Location = [-0.19931049 -0.15347096  0.        ], Hip Location = [-0.20001366 -0.15000743  0.15001115]
+Leg 4, Phase 3, Tau 0.03: Distance = 0.150053, Actual Foot Location = [-0.19931049 -0.15347096  0.        ], Hip Location = [-0.2000136  -0.15000742  0.15001113]
+Leg 4, Phase 3, Tau 0.03: Distance = 0.150053, Actual Foot Location = [-0.19931049 -0.15347096  0.        ], Hip Location = [-0.20001353 -0.15000741  0.15001112]
+Leg 4, Phase 3, Tau 0.04: Distance = 0.150053, Actual Foot Location = [-0.19931049 -0.15347096  0.        ], Hip Location = [-0.20001345 -0.15000741  0.15001111]
+Leg 4, Phase 4, Tau 0.00: Distance = 0.150053, Actual Foot Location = [-0.19931049 -0.15347096  0.        ], Hip Location = [-0.20001337 -0.1500074   0.1500111 ]
+Leg 4, Phase 4, Tau 0.07: Distance = 0.149818, Actual Foot Location = [-0.19931049 -0.15347096  0.        ], Hip Location = [-0.19996741 -0.1502418   0.14978203]
+Leg 4, Phase 4, Tau 0.15: Distance = 0.149100, Actual Foot Location = [-0.19931049 -0.15347096  0.        ], Hip Location = [-0.19981608 -0.15096227  0.14907807]
+Leg 4, Phase 4, Tau 0.22: Distance = 0.147926, Actual Foot Location = [-0.19931049 -0.15347096  0.        ], Hip Location = [-0.19955247 -0.15214734  0.14792021]
+Leg 4, Phase 4, Tau 0.30: Distance = 0.146391, Actual Foot Location = [-0.19931049 -0.15347096  0.        ], Hip Location = [-0.1991903  -0.15371243  0.14639104]
+Leg 4, Phase 4, Tau 0.38: Distance = 0.144650, Actual Foot Location = [-0.19931049 -0.15347096  0.        ], Hip Location = [-0.19876391 -0.15550991  0.14463483]
+Leg 4, Phase 5, Tau 0.00: Distance = 0.142913, Actual Foot Location = [-0.19931049 -0.15347096  0.        ], Hip Location = [-0.1983283  -0.15732903  0.14285745]
+Leg 4, Phase 5, Tau 0.01: Distance = 0.142729, Actual Foot Location = [-0.19931049 -0.15347096  0.        ], Hip Location = [-0.198282   -0.1575228   0.14266812]
+Leg 4, Phase 5, Tau 0.02: Distance = 0.142546, Actual Foot Location = [-0.19931049 -0.15347096  0.        ], Hip Location = [-0.19823568 -0.15771658  0.14247879]
+Leg 4, Phase 5, Tau 0.03: Distance = 0.142363, Actual Foot Location = [-0.19931049 -0.15347096  0.        ], Hip Location = [-0.19818936 -0.15791036  0.14228945]
+Leg 4, Phase 5, Tau 0.03: Distance = 0.142180, Actual Foot Location = [-0.19931049 -0.15347096  0.        ], Hip Location = [-0.19814302 -0.15810416  0.14210011]
+Leg 4, Phase 5, Tau 0.04: Distance = 0.141998, Actual Foot Location = [-0.19931049 -0.15347096  0.        ], Hip Location = [-0.19809667 -0.15829796  0.14191077]

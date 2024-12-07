@@ -123,7 +123,7 @@ if __name__ == "__main__":
     solver = SnoptSolver()
 
     print("Starting solve")
-    result = solver.Solve(tmls.prog)
+    tmls.result = solver.Solve(tmls.prog)
     # result = Solve(tmls.prog)
     
     # Check if the problem is feasible
@@ -139,7 +139,7 @@ if __name__ == "__main__":
 
     else:
         print("Optimization problem is not feasible.")
-        print("Solver result code:", result.GetInfeasibleConstraints(tmls.prog))
+        print("Solver result code:", tmls.result.GetInfeasibleConstraints(tmls.prog))
 
     # Create meshgrid for 3D plotting
     x = np.arange(0, 24)
