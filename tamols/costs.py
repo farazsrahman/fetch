@@ -4,16 +4,15 @@ from pydrake.symbolic import if_then_else, Expression
 from pydrake.math import exp, abs, sqrt
 from helpers import (
     evaluate_spline_position, evaluate_spline_velocity, 
-    evaluate_angular_momentum_derivative, evaluate_height_at_symbolic_xy,
-    evaluate_height_gradient, evaluate_smoothed_height_gradient, get_R_B,
-    get_stance_feet
+    evaluate_height_at_symbolic_xy,
+    get_R_B, get_stance_feet
 )
 from pydrake.symbolic import floor, ExtractVariablesFromExpression, Expression
 
 
 def add_tracking_cost(tmls: TAMOLSState):
     """Cost to track reference trajectory"""
-    print("Adding tracking cost...")
+    print("Adding tracking cost...") 
     if tmls.ref_vel is None:
         raise ValueError("Reference velocity not set")
 
@@ -82,8 +81,8 @@ def add_foothold_on_ground_cost(tmls: TAMOLSState):
         h_pi = evaluate_height_at_symbolic_xy(tmls, tmls.h, tmls.p[i][0], tmls.p[i][1])
         
         # Add to cost using interpolated height
-        cost = (h_pi - e_z.dot(tmls.p[i]))**2
-        total_cost += 10**4 * cost
+        cost = (h_pi - tmls.p[i][2])**2
+        total_cost += 10 * cost
 
     tmls.prog.AddCost(total_cost)
 

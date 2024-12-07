@@ -18,10 +18,71 @@ def evaluate_spline_velocity(tmls, coeffs, tau):
     return np.sum([i * coeffs[:, i] * tau**(i - 1) for i in range(1, tmls.spline_order)], axis=0)
     
 def evaluate_spline_acceleration(tmls, coeffs, tau):
-    return np.sum([i * (i - 1) * coeffs[:, i] * tau**(i - 2) for i in range(2, tmls.spline_order)], axis=0)[:3]
+    return np.sum([i * (i - 1) * coeffs[:, i] * tau**(i - 2) for i in range(2, tmls.spline_order)], axis=0)
 
-def evaluate_angular_momentum_derivative(tmls, tau):
-    return np.zeros(3) # TODO: Implement this
+def evaluate_angular_momentum_derivative(tmls, coeffs, tau):
+    # Extract Euler angles, rates, and second derivatives
+
+    return np.zeros(3) # throwing error because the type is no longer symbolic.Expression (come back to this)
+    # NOTE: GPTed
+    pos = evaluate_spline_position(tmls, coeffs, tau)               # [x, y, z, phi, theta, psi]
+    vel = evaluate_spline_velocity(tmls, coeffs, tau)               # [vx, vy, vz, phi_dot, theta_dot, psi_dot]
+    accel_full = evaluate_spline_acceleration(tmls, coeffs, tau)    # [ax, ay, az, phi_ddot, theta_ddot, psi_ddot]
+
+    # Unpack Euler angles and their derivatives
+    phi, theta, psi = pos[3], pos[4], pos[5]
+    phi_dot, theta_dot, psi_dot = vel[3], vel[4], vel[5]
+    phi_ddot, theta_ddot, psi_ddot = accel_full[3], accel_full[4], accel_full[5]
+
+    # Convert Euler angle rates to body angular velocity (assuming Z-Y-X or similar Euler angle sequence)
+    # The formulas here match a common rotation sequence. Adjust if your Euler angle definition differs.
+    # For a Z-Y-X sequence (yaw=psi, pitch=theta, roll=phi):
+    # omega_x = phi_dot - psi_dot * sin(theta)
+    # omega_y = theta_dot * cos(phi) + psi_dot * sin(phi) * cos(theta)
+    # omega_z = psi_dot * cos(phi)*cos(theta) - theta_dot * sin(phi)
+    
+    sin_phi, cos_phi = np.sin(phi), np.cos(phi)
+    sin_theta, cos_theta = np.sin(theta), np.cos(theta)
+
+    omega_x = phi_dot - psi_dot * sin_theta
+    omega_y = theta_dot * cos_phi + psi_dot * sin_phi * cos_theta
+    omega_z = psi_dot * cos_phi * cos_theta - theta_dot * sin_phi
+    omega = np.array([omega_x, omega_y, omega_z])
+
+    # Compute angular acceleration (dot_omega)
+    # Taking the time derivative of the above expressions:
+    # dot_omega_x = phi_ddot - [psi_ddot * sin(theta) + psi_dot * cos(theta)*theta_dot]
+    dot_omega_x = phi_ddot - (psi_ddot * sin_theta + psi_dot * cos_theta * theta_dot)
+
+    # dot_omega_y is a bit more complex:
+    # dot_omega_y = theta_ddot*cos(phi) - theta_dot*phi_dot*sin(phi)
+    #              + psi_ddot*sin(phi)*cos(theta)
+    #              + psi_dot[cos(phi)*cos(theta)*phi_dot - sin(phi)*sin(theta)*theta_dot]
+    dot_omega_y = (theta_ddot*cos_phi 
+                   - theta_dot*phi_dot*sin_phi
+                   + psi_ddot*sin_phi*cos_theta
+                   + psi_dot*(cos_phi*cos_theta*phi_dot - sin_phi*sin_theta*theta_dot))
+
+    # dot_omega_z:
+    # dot_omega_z = psi_ddot*cos(phi)*cos(theta)
+    #              - psi_dot[ sin(phi)*cos(theta)*phi_dot + cos(phi)*sin(theta)*theta_dot ]
+    #              - theta_ddot*sin(phi)
+    #              - theta_dot*phi_dot*cos(phi)
+    dot_omega_z = (psi_ddot*cos_phi*cos_theta
+                   - psi_dot*(sin_phi*cos_theta*phi_dot + cos_phi*sin_theta*theta_dot)
+                   - theta_ddot*sin_phi
+                   - theta_dot*phi_dot*cos_phi)
+
+    dot_omega = np.array([dot_omega_x, dot_omega_y, dot_omega_z])
+
+    # Compute angular momentum derivative
+    # L = I * omega (for diagonal I)
+    # L_dot = I * dot_omega + omega x (I * omega)
+    I = tmls.moment_of_inertia  # Should be an array like [I_x, I_y, I_z]
+    I_omega = I * omega
+    L_dot = I * dot_omega + np.cross(omega, I_omega)
+
+    return L_dot
 
 
 # GAIT
@@ -39,21 +100,26 @@ def get_stance_feet(tmls, phase):
 # HEIGHT MAP
 
 def evaluate_height_at_symbolic_xy(tmls, height_map, x, y):
-    m, n = height_map.shape
+    m, n = height_map.shape # NOTE: SHOULD BE SQUARE
     grid_size = 0.04
-    offset = 1.0
+    offset = 0.5 # assume 1m x 1m map then .5m offset takes you to the center
     i = (x + offset) / grid_size
     j = (y + offset) / grid_size
     total_height = 0
 
     for k in range(m):
         for l in range(n):
-            partial_height = if_then_else(abs(i - k) < 1, 
-            if_then_else(abs(j - l) < 1, height_map[k, l] * (1 - abs(i - k)) * (1 - abs(j - l)), 0), 0)
+            partial_height = if_then_else(abs(i - k) < 1,
+                                          if_then_else(abs(j - l) < 1, 
+                                                       height_map[k, l] * (1 - abs(i - k)) * (1 - abs(j - l)), 
+                                                       0), 
+                                            0)
             total_height += partial_height
 
     return total_height
 
+
+# TODO: finished?
 def evaluate_smoothed_height_gradient(tmls, x, y):
     if tmls.height_map_smoothed is None:
         return np.zeros(2)
@@ -70,7 +136,6 @@ def evaluate_height_gradient(tmls, x, y):
 
 def determinant(a, b, c):
     return a.dot(np.cross(b, c))
-
 
 def get_R_B(phi_B):
     """

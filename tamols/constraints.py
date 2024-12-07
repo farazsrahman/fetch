@@ -6,6 +6,7 @@ from helpers import (
     evaluate_angular_momentum_derivative, evaluate_height_at_symbolic_xy, 
     determinant
 )
+from pydrake.solvers import QuadraticConstraint
 
 def add_initial_constraints(tmls: TAMOLSState, log: bool = False):
     """Add initial and junction constraints on the spline coefficients"""
@@ -68,14 +69,14 @@ def add_dynamics_constraints(tmls: TAMOLSState):
         
         for tau in np.linspace(0, T_k, tmls.tau_sampling_rate+1)[:tmls.tau_sampling_rate]:
             p_B = evaluate_spline_position(tmls, a_k, tau)[:3]
-            a_B = evaluate_spline_acceleration(tmls, a_k, tau)
-            L_dot_B = evaluate_angular_momentum_derivative(tmls, tau)
+            a_B = evaluate_spline_acceleration(tmls, a_k, tau)[0:3]
+            L_dot_B = evaluate_angular_momentum_derivative(tmls, a_k, tau)[0:3]
             
             if N > 0: # Eq 17a: Friction cone constraint - FIXED
                 proj = I_3 - np.outer(e_z, e_z)
                 proj_acc = proj @ a_B
 
-                print(f"adding N={N} constraint 17a")
+                # print(f"adding N={N} constraint 17a")
                 tmls.prog.AddConstraint(
                     (mu * e_z.dot(a_B))**2 >= (1 + eps)**2 * proj_acc.dot(proj_acc)
                 )
@@ -87,10 +88,24 @@ def add_dynamics_constraints(tmls: TAMOLSState):
                     p_j = tmls.p[j] if p_alr_at_des_pos[j] else tmls.p_meas[j]
                     p_ij = p_j - p_i
                     
-                    print(f"adding N={N} constraint 17b")
+                    # print("\n\n\n")
+                    # print(f"Type of inputs to LHS: p_ij: {type(p_ij)}, p_B - p_i: {type(p_B - p_i)}, a_B: {type(a_B)}")
+                    # print(f"Type of LHS: {type(m * determinant(p_ij, p_B - p_i, a_B))}")
+                    # print(f"Type of inputs to RHS: p_ij: {type(p_ij)}, L_dot_B: {type(L_dot_B)} w/ dtype {L_dot_B.dtype}")
+                    # print(f"Type of RHS: {type((1 + eps) * p_ij.dot(L_dot_B))}, dtype:   ")#  {((1 + eps) * p_ij.dot(L_dot_B)).dtype}")
+                    # print("\n")
+
+                    
+                    LHS = m * determinant(p_ij, p_B - p_i, a_B)
+                    RHS = (1 + eps) * p_ij.dot(L_dot_B)
+
+                    # print(f"Type of LHS - RHS: {type(LHS - RHS)}")
+
+                    # print("\n\n\n")
+
+                    # print(f"adding N={N} constraint 17b")
                     tmls.prog.AddConstraint(
-                        m * determinant(p_ij, p_B - p_i, a_B) <= 
-                        (1 + eps) * p_ij.dot(L_dot_B)
+                        LHS <= RHS
                     )
                 
                     
@@ -102,14 +117,14 @@ def add_dynamics_constraints(tmls: TAMOLSState):
                 p_ij = p_j - p_i
                 
                 # 17c: Equality constraint
-                print(f"adding N={N} constraint 17c")
+                # print(f"adding N={N} constraint 17c")
                 tmls.prog.AddConstraint(
                     m * determinant(p_ij, p_B - p_i, a_B) == 
                     p_ij.dot(L_dot_B)
                 )
                 
                 # 17d: Moment constraint
-                print(f"adding N={N} constraint 17d")
+                # print(f"adding N={N} constraint 17d")
                 M_i = m * np.cross(p_B - p_i, a_B) - L_dot_B
                 tmls.prog.AddConstraint(
                     determinant(e_z, p_ij, M_i) >= 0

@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 import numpy as np
 from pydrake.all import (
     MathematicalProgram,
+    Constraint, Cost
 )
 from pydrake.solvers import MathematicalProgramResult
 from typing import List, Dict, Union
@@ -31,7 +32,8 @@ class TAMOLSState:
     # Physical parameters
     mass: float = 1.0
     mu: float = 0.7
-    inertia: np.ndarray = field(default_factory=lambda: np.diag([0.07, 0.26, 0.242]))
+    # TODO: find something reasonable for this
+    moment_of_inertia: np.ndarray = field(default_factory=lambda: np.diag([0.07, 0.26, 0.242]))
 
     # Leg configuration
     hip_offsets: np.ndarray = field(default_factory=lambda: np.array([
@@ -69,6 +71,21 @@ class TAMOLSState:
     spline_coeffs: List[np.ndarray] = None
     p: np.ndarray = None
     epsilon: np.ndarray = None
+
+
+    # Program Constraint Bindings
+    test_constraints: List[Constraint] = field(default_factory=list)
+    initial_constraints: List[Constraint] = field(default_factory=list)
+    dynamics_constraints: List[Constraint] = field(default_factory=list)
+    kinematic_constraints: List[Constraint] = field(default_factory=list)
+    giac_constraints: List[Constraint] = field(default_factory=list)
+
+    # Program Cost Bindings
+    tracking_costs: List[Cost] = field(default_factory=list)
+    foothold_on_ground_costs: List[Cost] = field(default_factory=list)
+    nominal_kinematic_costs: List[Cost] = field(default_factory=list)
+    base_pose_alignment_costs: List[Cost] = field(default_factory=list)
+    edge_avoidance_costs: List[Cost] = field(default_factory=list)
     
     # Optimization results
     result: MathematicalProgramResult = None

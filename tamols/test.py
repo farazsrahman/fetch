@@ -20,6 +20,7 @@ from costs import (
 )
 from plotting_helpers import *
 from map_processing import *
+import manual_heightmaps as mhm
 
 def setup_test_state(tmls: TAMOLSState):
      # Create a TAMOLSState instance
@@ -33,28 +34,12 @@ def setup_test_state(tmls: TAMOLSState):
         [-0.2, -0.1, 0] # Rear right leg
     ])  # Reasonable initial foot positions
 
-    grid_size = 24  # 50 x 0.04 = 2 meters
-    elevation_map = np.zeros((grid_size, grid_size))
-
-    platform_size = 10
-    platform_height = 0.1
-
-    start_x = (grid_size - platform_size) // 2
-    end_x = start_x + platform_size
-    start_y = (grid_size - platform_size) // 2
-    end_y = start_y + platform_size
-
-    # Add the raised square platform
-    elevation_map[start_x:end_x, start_y:end_y] = platform_height
-
-    # Add slight random variations to make it more realistic
-    # noise_amplitude = 0.005  # 5mm of noise
-    # elevation_map += noise_amplitude * np.random.randn(grid_size, grid_size)
-
+    # elevation_map = mhm.get_platform_heightmap()
+    elevation_map = mhm.get_heightmap_with_holes()
+    
     h_s1, h_s2, gradients = process_height_maps(elevation_map)
 
     tmls.h = elevation_map
-    # tmls.h = np.zeros((grid_size, grid_size))
     tmls.h_s1 = h_s1
     tmls.h_s2 = h_s2
 
@@ -98,23 +83,23 @@ if __name__ == "__main__":
 
     # test specifc - hard coding final foot holds
     for leg_idx, pos in enumerate([[0.4, 0.1, 0], [0.4, -0.1, 0], [0, 0.1, 0], [0, -0.1, 0]]):
-        for dim in [2]: # only enforcing z-position
-            tmls.prog.AddLinearConstraint(tmls.p[leg_idx, dim] == pos[dim])
+        for dim in range(2): # just x, y pos (z handled by foot on ground cost
+            c = tmls.prog.AddLinearConstraint(tmls.p[leg_idx, dim] == pos[dim])
+            tmls.test_constraints.append(c)
 
     # CONSTRAINTS
-    add_initial_constraints(tmls)
-    add_dynamics_constraints(tmls)
-
-    add_kinematic_constraints(tmls) # for some reason problem becomes infeasible without this
-    add_giac_constraints(tmls)
+    # add_initial_constraints(tmls)
+    # add_dynamics_constraints(tmls)
+    # add_kinematic_constraints(tmls) # for some reason problem becomes infeasible without this
+    # add_giac_constraints(tmls)
 
     
     # COSTS
-    add_tracking_cost(tmls)
+    # add_tracking_cost(tmls)
     add_foothold_on_ground_cost(tmls)
-    add_nominal_kinematic_cost(tmls)
-    add_base_pose_alignment_cost(tmls)
-    add_edge_avoidance_cost(tmls)
+    # add_nominal_kinematic_cost(tmls)
+    # add_base_pose_alignment_cost(tmls)
+    # add_edge_avoidance_cost(tmls)
 
 
     # add_foot_collision_cost(tmls)

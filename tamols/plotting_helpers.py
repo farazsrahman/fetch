@@ -114,6 +114,23 @@ def plot_optimal_solutions_interactive(tmls: TAMOLSState):
             )
         )
     )
+
+
+    # Plot height map
+    height_map = tmls.h
+    grid_size = height_map.shape[0]
+    x = np.linspace(-0.5, 0.5, grid_size)
+    y = np.linspace(-0.5, 0.5, grid_size)
+    x, y = np.meshgrid(x, y)
+    z = height_map
+
+    # Add height map surface plot
+    fig.add_trace(go.Surface(x=x, y=y, z=z, colorscale='Viridis', opacity=0.7, showscale=False, name='Height Map'))
+
+
+
+
+
     # Save as HTML file for interactive viewing
     fig.write_html('out/interactive_optimal_base_pose_and_footsteps.html')
 
@@ -163,28 +180,18 @@ def save_optimal_solutions(tmls: TAMOLSState, filepath='out/optimal_solution.txt
         for i in range(optimal_footsteps.shape[0]):
             f.write(f"Footstep {i+1}: {optimal_footsteps[i, 0]}, {optimal_footsteps[i, 1]}, {optimal_footsteps[i, 2]}\n")
         
-        f.write("\nOptimal Spline Coefficients:\n")
-        for i in range(num_phases):
-            f.write(f"Spline Phase {i+1} Coefficients:\n")
-            np.savetxt(f, optimal_spline_coeffs[i], fmt='%.6f')
-            f.write("\n")
+        # f.write("\nOptimal Spline Coefficients:\n")
+        # for i in range(num_phases):
+        #     f.write(f"Spline Phase {i+1} Coefficients:\n")
+        #     np.savetxt(f, optimal_spline_coeffs[i], fmt='%.6f')
+        #     f.write("\n")
 
         f.write("\nObjective Function Optimal Value:\n")
         optimal_value = tmls.result.get_optimal_cost()  # Assuming this method exists
         f.write(f"Optimal Value: {optimal_value:.6f}\n")
 
-       
         # VELOCITY
-        f.write("\nReference Velocity:\n")
-        ref_vel = tmls.ref_vel  # Assuming this attribute exists
-        f.write(f"Reference Velocity: {ref_vel}\n")
-
-        # f.write("\nVelocity at Time Steps Tau:\n")
-        # for i in range(num_phases):
-        #     T_k = tmls.phase_durations[i]
-        #     for tau in np.linspace(0, T_k, tmls.tau_sampling_rate+1)[:tmls.tau_sampling_rate]:
-        #         velocity_at_tau = evaluate_spline_velocity(tmls, optimal_spline_coeffs[i], tau, 1)  # Assume T_k = 1 forall k
-        #         f.write(f"Velocity at tau={tau:.2f}: {np.array2string(velocity_at_tau, formatter={'float_kind':lambda x: f'{x:.4f}'})}\n")
+        f.write(f"Reference Velocity: {tmls.ref_vel}\n")
 
         # FOOT DISTANCES AND COSTS
         f.write("\nFoot Distances and Associated Costs:\n")
@@ -195,18 +202,21 @@ def save_optimal_solutions(tmls: TAMOLSState, filepath='out/optimal_solution.txt
                 dist = np.linalg.norm(optimal_footsteps[i] - optimal_footsteps[j])
                 f.write(f"Foot {i+1} to {j+1}: {dist:.6f}\n")
 
-        
-
-        f.write("\nDistance between leg index and hip location for kinematic constraints:\n")
+        # Distance between leg index and last spline position
+        f.write("\nDistance between leg index and last spline position:\n")
         for leg_idx in range(tmls.num_legs):
             for phase_idx, at_des_pos in enumerate(tmls.gait_pattern['at_des_position']):
                 if at_des_pos[leg_idx]:
                     T_k = tmls.phase_durations[phase_idx]
-                    for tau in np.linspace(0, T_k, tmls.tau_sampling_rate+1)[:tmls.tau_sampling_rate]:
-                        spline_coeffs_solution = tmls.result.GetSolution(tmls.spline_coeffs[phase_idx])
-                        p_solution = tmls.result.GetSolution(tmls.p[leg_idx])
-                        
-                        spline_pos = evaluate_spline_position(tmls, spline_coeffs_solution, tau)[0:3]
-                        hip_location = spline_pos + tmls.hip_offsets[leg_idx]
-                        distance = np.linalg.norm(p_solution - hip_location)
-                        f.write(f"Leg {leg_idx+1}, Phase {phase_idx+1}, Tau {tau:.2f}: Distance = {distance:.6f}, Actual Foot Location = {p_solution}, Hip Location = {spline_pos + tmls.hip_offsets[leg_idx]}\n")
+                    spline_coeffs_solution = tmls.result.GetSolution(tmls.spline_coeffs[phase_idx])
+                    p_solution = tmls.result.GetSolution(tmls.p[leg_idx])
+                    
+                    # Evaluate the spline position at the end of the phase (tau = T_k)
+                    spline_pos = evaluate_spline_position(tmls, spline_coeffs_solution, T_k)[0:3]
+                    distance = np.linalg.norm(p_solution - spline_pos)
+                    f.write(f"Leg {leg_idx+1}, Phase {phase_idx+1}: Distance = {distance:.6f}, Actual Foot Location = {p_solution}, Last Spline Position = {spline_pos}\n")
+
+
+        f.write("\nTest Constraints Information:\n")
+        for idx, constraint in enumerate(tmls.test_constraints):
+            f.write(f"\tConstraint {idx+1}: {constraint}\n")
