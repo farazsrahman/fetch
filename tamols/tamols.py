@@ -16,6 +16,12 @@ class TAMOLSState:
     h: np.ndarray = None
     h_s1: np.ndarray = None
     h_s2: np.ndarray = None
+    h_grad_x: np.ndarray = None
+    h_grad_y: np.ndarray = None
+    h_s1_grad_x: np.ndarray = None
+    h_s1_grad_y: np.ndarray = None
+    h_s2_grad_x: np.ndarray = None
+    h_s2_grad_y: np.ndarray = None
 
     # Robot configuration
     num_legs: int = 4
@@ -45,6 +51,7 @@ class TAMOLSState:
 
     # Optimization hyper-parameters TODO
     tau_sampling_rate: int = 6
+    base_pose_sampling_rate: int = 1
     weights: Dict[str, float] = field(default_factory=lambda: {
         'robustness_margin': 1.0,
         'footholds_on_ground': 1.0,

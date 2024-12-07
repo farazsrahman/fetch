@@ -5,7 +5,8 @@ from pydrake.math import exp, abs, sqrt
 from helpers import (
     evaluate_spline_position, evaluate_spline_velocity, 
     evaluate_angular_momentum_derivative, evaluate_height_at_symbolic_xy,
-    evaluate_height_gradient, evaluate_smoothed_height_gradient, get_R_B
+    evaluate_height_gradient, evaluate_smoothed_height_gradient, get_R_B,
+    get_stance_feet
 )
 from pydrake.symbolic import floor, ExtractVariablesFromExpression, Expression
 
@@ -27,7 +28,7 @@ def add_tracking_cost(tmls: TAMOLSState):
             vel = evaluate_spline_velocity(tmls, a_k, tau)[0:3]
 
             for dim in range(3):
-                weight = 0.3
+                weight = 2 * T_k / tmls.tau_sampling_rate
                 total_cost += weight * (vel[dim] - tmls.ref_vel[dim])**2
 
     tmls.prog.AddQuadraticCost(total_cost)
@@ -82,7 +83,37 @@ def add_foothold_on_ground_cost(tmls: TAMOLSState):
         
         # Add to cost using interpolated height
         cost = (h_pi - e_z.dot(tmls.p[i]))**2
-        total_cost += cost
+        total_cost += 10**4 * cost
+
+    tmls.prog.AddCost(total_cost)
+
+def add_nominal_kinematic_cost(tmls: TAMOLSState):
+    """Cost for nominal kinematics"""
+    print("Adding nominal kinematic cost...")
+
+    total_cost = 0
+
+    l_des = np.array([0., 0., tmls.h_des])
+
+    num_phases = len(tmls.phase_durations)
+    for phase in range(num_phases):
+        a_k = tmls.spline_coeffs[phase]
+        T_k = tmls.phase_durations[phase]
+
+        p_B = evaluate_spline_position(tmls, a_k, T_k / 2.0)[:3]
+        phi_B = evaluate_spline_position(tmls, a_k, T_k / 2.0)[3:6]
+
+        R_B = get_R_B(phi_B)
+
+        stance_feet = get_stance_feet(tmls, phase)
+        p_alr_at_des_pos = tmls.gait_pattern['at_des_position'][phase]
+
+        for i in stance_feet:
+            base_minus_leg = p_B + R_B.dot(tmls.hip_offsets[i]) - l_des
+            p_i = tmls.p[i] if p_alr_at_des_pos[i] else tmls.p_meas[i]
+            cost = np.dot(base_minus_leg - p_i, base_minus_leg - p_i)
+            weight = 1
+            total_cost += weight * cost
 
     tmls.prog.AddCost(total_cost)
 
@@ -100,17 +131,42 @@ def add_base_pose_alignment_cost(tmls: TAMOLSState):
         a_k = tmls.spline_coeffs[phase]
         T_k = tmls.phase_durations[phase]
 
-        for tau in np.linspace(0, T_k, tmls.tau_sampling_rate+1)[:tmls.tau_sampling_rate]:
+        for tau in np.linspace(0, T_k, tmls.base_pose_sampling_rate+1)[:tmls.base_pose_sampling_rate]:
             p_B = evaluate_spline_position(tmls, a_k, tau)[:3]
             phi_B = evaluate_spline_position(tmls, a_k, tau)[3:6]
 
             R_B = get_R_B(phi_B)
 
-            hs2_pB = evaluate_height_at_symbolic_xy(tmls, tmls.hs2, p_B[0], p_B[1])
+            hs2_pB = evaluate_height_at_symbolic_xy(tmls, tmls.h_s2, p_B[0], p_B[1])
             for i in range(tmls.num_legs):
                 base_minus_leg = p_B + R_B.dot(tmls.hip_offsets[i]) - l_des
+                # base_minus_leg = p_B - l_des
                 cost = (e_z.dot(base_minus_leg) - hs2_pB)**2
-                total_cost += cost
+                weight = 0.1 * T_k / tmls.tau_sampling_rate
+                total_cost += weight * cost
+
+    tmls.prog.AddCost(total_cost)
+
+
+def add_edge_avoidance_cost(tmls: TAMOLSState):
+    """Cost to avoid edges"""
+    print("Adding edge avoidance cost...")
+
+    total_cost = 0
+
+    for i in range(tmls.num_legs):
+        # Create continuous height approximation using bilinear interpolation
+        h_grad_x_pi = evaluate_height_at_symbolic_xy(tmls, tmls.h_grad_x, tmls.p[i][0], tmls.p[i][1])
+        h_grad_y_pi = evaluate_height_at_symbolic_xy(tmls, tmls.h_grad_y, tmls.p[i][0], tmls.p[i][1])
+        h_s1_grad_x_pi = evaluate_height_at_symbolic_xy(tmls, tmls.h_s1_grad_x, tmls.p[i][0], tmls.p[i][1])
+        h_s1_grad_y_pi = evaluate_height_at_symbolic_xy(tmls, tmls.h_s1_grad_y, tmls.p[i][0], tmls.p[i][1])
+
+        h_grad_pi = np.array([h_grad_x_pi, h_grad_y_pi])
+        h_s1_grad_pi = np.array([h_s1_grad_x_pi, h_s1_grad_y_pi])
+        
+        # Add to cost using interpolated height
+        cost = h_grad_pi.dot(h_grad_pi) + h_s1_grad_pi.dot(h_s1_grad_pi)
+        total_cost += cost
 
     tmls.prog.AddCost(total_cost)
 
