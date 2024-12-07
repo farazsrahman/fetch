@@ -6,8 +6,9 @@ from tamols import TAMOLSState, setup_variables
 from constraints import (
     add_initial_constraints, 
     add_dynamics_constraints, 
-    add_kinematic_constraints,
     add_giac_constraints,
+    add_friction_cone_constraints,
+    add_kinematic_constraints,
 )
 from costs import (
     add_tracking_cost, 
@@ -34,8 +35,8 @@ def setup_test_state(tmls: TAMOLSState):
         [-0.2, -0.1, 0] # Rear right leg
     ])  # Reasonable initial foot positions
 
-    # elevation_map = mhm.get_platform_heightmap()
-    elevation_map = mhm.get_heightmap_with_holes()
+    elevation_map = mhm.get_random_rough_heightmap()
+    # elevation_map = mhm.get_heightmap_with_holes()
     
     h_s1, h_s2, gradients = process_height_maps(elevation_map)
 
@@ -47,13 +48,13 @@ def setup_test_state(tmls: TAMOLSState):
     tmls.h_s1_grad_x, tmls.h_s1_grad_y = gradients['h_s1']
     tmls.h_s2_grad_x, tmls.h_s2_grad_y = gradients['h_s2']
 
-    tmls.ref_vel = np.array([0.10, 0, 0])
+    tmls.ref_vel = np.array([0.1, 0, 0])
     tmls.ref_angular_momentum = np.array([0, 0, 0])
 
   
     # single spline / phase
     tmls.gait_pattern = {
-        'phase_timing': [0, 0.05, 0.50, 0.55, 1.00, 1.05],  # Adjusted phase timings
+        'phase_timing': [0, 0.4, 0.8, 1.2, 1.6, 2.0],  # Adjusted phase timings
         'contact_states': [
             [1, 1, 1, 1],
             [1, 0, 1, 0],
@@ -88,15 +89,16 @@ if __name__ == "__main__":
             tmls.test_constraints.append(c)
 
     # CONSTRAINTS
-    # add_initial_constraints(tmls)
+    add_initial_constraints(tmls)
     # add_dynamics_constraints(tmls)
-    # add_kinematic_constraints(tmls) # for some reason problem becomes infeasible without this
-    # add_giac_constraints(tmls)
+    add_kinematic_constraints(tmls) # for some reason problem becomes infeasible without this
+    add_giac_constraints(tmls)
+    add_friction_cone_constraints(tmls)
 
     
     # COSTS
-    # add_tracking_cost(tmls)
-    add_foothold_on_ground_cost(tmls)
+    add_tracking_cost(tmls)
+    # add_foothold_on_ground_cost(tmls)
     # add_nominal_kinematic_cost(tmls)
     # add_base_pose_alignment_cost(tmls)
     # add_edge_avoidance_cost(tmls)
@@ -126,52 +128,4 @@ if __name__ == "__main__":
         print("Optimization problem is not feasible.")
         print("Solver result code:", tmls.result.GetInfeasibleConstraints(tmls.prog))
 
-    # Create meshgrid for 3D plotting
-    x = np.arange(0, 24)
-    y = np.arange(0, 24)
-    X, Y = np.meshgrid(x, y)
-
-    # Create 3D visualization
-    fig = plt.figure(figsize=(20, 6))
-
-    # Original height map
-    ax1 = fig.add_subplot(131, projection='3d')
-    surf1 = ax1.plot_surface(X, Y, tmls.h, cmap='terrain', edgecolor='none')
-    ax1.set_title('TMLS Height Map (h)')
-    fig.colorbar(surf1, ax=ax1, shrink=0.5, aspect=5)
-    ax1.set_xlabel('Grid X')
-    ax1.set_ylabel('Grid Y')
-    ax1.set_zlabel('Height (m)')
-
-    # h_s1 map
-    ax2 = fig.add_subplot(132, projection='3d')
-    surf2 = ax2.plot_surface(X, Y, tmls.h_s1, cmap='terrain', edgecolor='none')
-    ax2.set_title('TMLS Gaussian Filtered (h_s1)')
-    fig.colorbar(surf2, ax=ax2, shrink=0.5, aspect=5)
-    ax2.set_xlabel('Grid X')
-    ax2.set_ylabel('Grid Y')
-    ax2.set_zlabel('Height (m)')
-
-    # h_s2 map
-    ax3 = fig.add_subplot(133, projection='3d')
-    surf3 = ax3.plot_surface(X, Y, tmls.h_s2, cmap='terrain', edgecolor='none')
-    ax3.set_title('TMLS Virtual Floor (h_s2)')
-    fig.colorbar(surf3, ax=ax3, shrink=0.5, aspect=5)
-    ax3.set_xlabel('Grid X')
-    ax3.set_ylabel('Grid Y')
-    ax3.set_zlabel('Height (m)')
-
-    # Adjust the view angle for better visualization
-    for ax in [ax1, ax2, ax3]:
-        ax.view_init(elev=30, azim=45)
-        ax.set_box_aspect([1,1,0.5])
-
-    plt.tight_layout()
-
-    # Save the figure with high DPI
-    plt.savefig('tmls_height_maps.png', dpi=300, bbox_inches='tight')
-    plt.close()
-
-
-
-
+   

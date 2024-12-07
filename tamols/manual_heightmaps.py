@@ -1,11 +1,13 @@
 import numpy as np
 
+GRID_SIZE = 12
+
 def get_flat_heightmap():
-    return np.zeros((24, 24))
+    return np.zeros((GRID_SIZE, GRID_SIZE))
 
 
 def get_platform_heightmap():
-    grid_size = 24  # 50 x 0.04 = 2 meters
+    grid_size = GRID_SIZE  # 50 x 0.04 = 2 meters
     elevation_map = np.zeros((grid_size, grid_size))
 
     platform_size_x = 10
@@ -24,7 +26,7 @@ def get_platform_heightmap():
 
 
 def get_random_rough_heightmap():
-    grid_size = 24
+    grid_size = GRID_SIZE
     elevation_map = np.random.rand(grid_size, grid_size) * 0.05
 
     # Smooth the heightmap by averaging with neighbors
@@ -36,7 +38,7 @@ def get_random_rough_heightmap():
 
 
 def get_heightmap_with_holes():
-    grid_size = 24
+    grid_size = GRID_SIZE
     elevation_map = np.random.rand(grid_size, grid_size) * 0.05
     drop_height = 0.75
 
@@ -54,8 +56,3 @@ def get_heightmap_with_holes():
         elevation_map[hole_x, hole_y] = -drop_height
 
     return elevation_map
-
-
-
-
-

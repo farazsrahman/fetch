@@ -79,7 +79,7 @@ class TAMOLSState:
     dynamics_constraints: List[Constraint] = field(default_factory=list)
     kinematic_constraints: List[Constraint] = field(default_factory=list)
     giac_constraints: List[Constraint] = field(default_factory=list)
-
+    friction_cone_constraints: List[Constraint] = field(default_factory=list)
     # Program Cost Bindings
     tracking_costs: List[Cost] = field(default_factory=list)
     foothold_on_ground_costs: List[Cost] = field(default_factory=list)

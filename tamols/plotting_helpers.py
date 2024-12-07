@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 from pydrake.symbolic import Expression, Evaluate
 from tamols import TAMOLSState
-from helpers import evaluate_spline_positions, evaluate_spline_velocity, evaluate_spline_position
+from helpers import evaluate_spline_velocity, evaluate_spline_position
 
 
 def plot_optimal_solutions_interactive(tmls: TAMOLSState):
@@ -41,38 +41,70 @@ def plot_optimal_solutions_interactive(tmls: TAMOLSState):
             textposition='top center'
         ))
     
+    # Plot lines between each adjacent footstep to indicate convex outline
+    edges = [(0, 1), (0, 2), (1, 3), (2, 3)]
+    for i, j in edges:
+        fig.add_trace(go.Scatter3d(
+            x=[optimal_footsteps[i, 0], optimal_footsteps[j, 0]],
+            y=[optimal_footsteps[i, 1], optimal_footsteps[j, 1]],
+            z=[optimal_footsteps[i, 2], optimal_footsteps[j, 2]],
+            mode='lines',
+            name=f'Edge {i+1}-{j+1}',
+            line=dict(color='purple', width=2),  # Make lines purple and thinner
+            showlegend=False
+        ))
+
+    
     # Plot splines for each phase
-    for i in range(num_phases):
-        tau_values = np.linspace(0, 1, 100)
-        spline_points = evaluate_spline_positions(tmls, optimal_spline_coeffs[i], tau_values)
+    for phase in range(num_phases):
+        a_k = optimal_spline_coeffs[phase]
+        T_k = tmls.phase_durations[phase]
         
+        # Generate points along the spline
+        tau_values = np.linspace(0, T_k, 100)
+        spline_points = np.array([evaluate_spline_position(tmls, a_k, tau) for tau in tau_values])
+        
+        # Plot the spline
         fig.add_trace(go.Scatter3d(
             x=spline_points[:, 0],
             y=spline_points[:, 1],
             z=spline_points[:, 2],
             mode='lines',
-            name=f'Spline Phase {i+1}',
-            line=dict(color='blue', width=4),  # Make spline lines thick and blue
+            name=f'Spline Phase {phase+1}',
+            line=dict(color='blue', width=4),
+            showlegend=True
         ))
-        
-        # Add end point markers without text
+
+        # Add endpoints for each spline
         fig.add_trace(go.Scatter3d(
-            x=[spline_points[-1, 0]],
-            y=[spline_points[-1, 1]],
-            z=[spline_points[-1, 2]],
+            x=[spline_points[0, 0], spline_points[-1, 0]],
+            y=[spline_points[0, 1], spline_points[-1, 1]],
+            z=[spline_points[0, 2], spline_points[-1, 2]],
             mode='markers',
-            name=f'End {i+1}',
-            marker=dict(size=6, color=colors[i % len(colors)]),
-            showlegend=False
+            name=f'Spline Endpoints Phase {phase+1}',
+            marker=dict(size=6, color='orange'),
+            showlegend=True
         ))
+
+        # Add beginning point for spline one
+        if phase == 0:
+            fig.add_trace(go.Scatter3d(
+                x=[spline_points[0, 0]],
+                y=[spline_points[0, 1]],
+                z=[spline_points[0, 2]],
+                mode='markers',
+                name='Spline Start Point',
+                marker=dict(size=7, color='orange'),
+                showlegend=True
+            ))
     
-    # Update layout
+    # Update layout - THIS IS WHERE SIZE OF PLOT SET
     fig.update_layout(
         title='Optimal Base Pose and Footsteps',
         scene=dict(
             xaxis=dict(range=[-1, 1], title='X'),
             yaxis=dict(range=[-1, 1], title='Y'),
-            zaxis=dict(range=[0, 1], title='Z'),
+            zaxis=dict(range=[-0.4, 1], title='Z'),  # Adjusted to plot down to -0.3
             aspectmode='cube'  # This ensures equal scaling
         ),
         legend=dict(
@@ -128,45 +160,8 @@ def plot_optimal_solutions_interactive(tmls: TAMOLSState):
     fig.add_trace(go.Surface(x=x, y=y, z=z, colorscale='Viridis', opacity=0.7, showscale=False, name='Height Map'))
 
 
-
-
-
     # Save as HTML file for interactive viewing
     fig.write_html('out/interactive_optimal_base_pose_and_footsteps.html')
-
-def plot_optimal_solutions(tmls: TAMOLSState):
-    optimal_footsteps = tmls.optimal_footsteps
-    optimal_spline_coeffs = tmls.optimal_spline_coeffs
-    num_phases = tmls.num_phases
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-
-    # Plot initial foot positions (p_meas) in black
-    for i in range(tmls.p_meas.shape[0]):
-        ax.scatter(tmls.p_meas[i, 0], tmls.p_meas[i, 1], tmls.p_meas[i, 2], label=f'Initial Footstep {i+1}', color='k')
-
-    colors = ['r', 'g', 'g', 'r']
-    for i in range(optimal_footsteps.shape[0]):
-        ax.scatter(optimal_footsteps[i, 0], optimal_footsteps[i, 1], optimal_footsteps[i, 2], label=f'Footstep {i+1}', color=colors[i % len(colors)])
-
-    for i in range(num_phases):
-        T = tmls.phase_durations[i]
-        tau_values = np.linspace(0, 1, 100)
-
-        spline_points = evaluate_spline_positions(tmls, optimal_spline_coeffs[i], tau_values)
-        ax.plot(spline_points[:, 0], spline_points[:, 1], spline_points[:, 2], color='blue', linewidth=2)  # Make spline lines thick and blue
-        
-    ax.set_xlim([-1, 1])
-    ax.set_ylim([-1, 1])
-    ax.set_zlim([0, 1])
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-    ax.set_title('Optimal Base Pose and Footsteps')
-    ax.legend(loc='upper left', bbox_to_anchor=(1.05, 1), fontsize='small')
-    
-    plt.savefig('out/optimal_base_pose_and_footsteps.png')
 
 
 def save_optimal_solutions(tmls: TAMOLSState, filepath='out/optimal_solution.txt'):
@@ -190,33 +185,77 @@ def save_optimal_solutions(tmls: TAMOLSState, filepath='out/optimal_solution.txt
         optimal_value = tmls.result.get_optimal_cost()  # Assuming this method exists
         f.write(f"Optimal Value: {optimal_value:.6f}\n")
 
+        f.write("\nOptimal Spline End Points and Euler Angles:\n")
+        for i in range(num_phases):
+            T_k = tmls.phase_durations[i]
+            start_values = evaluate_spline_position(tmls, optimal_spline_coeffs[i], 0)
+            end_values = evaluate_spline_position(tmls, optimal_spline_coeffs[i], T_k)
+
+            f.write(f"Phase {i+1} Start Point: {start_values[0]: >10.6f}, {start_values[1]: >10.6f}, {start_values[2]: >10.6f}, {start_values[3]: >10.6f}, {start_values[4]: >10.6f}, {start_values[5]: >10.6f}\n")
+            if i == num_phases - 1:
+                f.write(f"Phase {i+1} End Point:   {end_values[0]: >10.6f}, {end_values[1]: >10.6f}, {end_values[2]: >10.6f}, {end_values[3]: >10.6f}, {end_values[4]: >10.6f}, {end_values[5]: >10.6f}\n")
+
+        f.write("\nOptimal Spline Velocities and Euler Derivatives:\n")
+        for i in range(num_phases):
+            T_k = tmls.phase_durations[i]
+            start_velocity_values = evaluate_spline_velocity(tmls, optimal_spline_coeffs[i], 0)
+            end_velocity_values = evaluate_spline_velocity(tmls, optimal_spline_coeffs[i], T_k)
+
+            f.write(f"Phase {i+1} Start Velocity: {start_velocity_values[0]: >10.6f}, {start_velocity_values[1]: >10.6f}, {start_velocity_values[2]: >10.6f}, {start_velocity_values[3]: >10.6f}, {start_velocity_values[4]: >10.6f}, {start_velocity_values[5]: >10.6f}\n")
+            if i == num_phases - 1:
+                f.write(f"Phase {i+1} End Velocity:   {end_velocity_values[0]: >10.6f}, {end_velocity_values[1]: >10.6f}, {end_velocity_values[2]: >10.6f}, {end_velocity_values[3]: >10.6f}, {end_velocity_values[4]: >10.6f}, {end_velocity_values[5]: >10.6f}\n")
+
         # VELOCITY
-        f.write(f"Reference Velocity: {tmls.ref_vel}\n")
+        f.write(f"\n\nReference Velocity: {tmls.ref_vel}\n")
+
+
+
+
+
+
+
 
         # FOOT DISTANCES AND COSTS
-        f.write("\nFoot Distances and Associated Costs:\n")
+        f.write("\nFoot Distances to Base:\n")
         num_legs = tmls.num_legs
+        base_pos = tmls.base_pose[:3]
 
         for i in range(num_legs):
-            for j in range(i + 1, num_legs):
-                dist = np.linalg.norm(optimal_footsteps[i] - optimal_footsteps[j])
-                f.write(f"Foot {i+1} to {j+1}: {dist:.6f}\n")
-
-        # Distance between leg index and last spline position
-        f.write("\nDistance between leg index and last spline position:\n")
-        for leg_idx in range(tmls.num_legs):
-            for phase_idx, at_des_pos in enumerate(tmls.gait_pattern['at_des_position']):
-                if at_des_pos[leg_idx]:
-                    T_k = tmls.phase_durations[phase_idx]
-                    spline_coeffs_solution = tmls.result.GetSolution(tmls.spline_coeffs[phase_idx])
-                    p_solution = tmls.result.GetSolution(tmls.p[leg_idx])
-                    
-                    # Evaluate the spline position at the end of the phase (tau = T_k)
-                    spline_pos = evaluate_spline_position(tmls, spline_coeffs_solution, T_k)[0:3]
-                    distance = np.linalg.norm(p_solution - spline_pos)
-                    f.write(f"Leg {leg_idx+1}, Phase {phase_idx+1}: Distance = {distance:.6f}, Actual Foot Location = {p_solution}, Last Spline Position = {spline_pos}\n")
+            dist = np.linalg.norm(optimal_footsteps[i] - base_pos)
+            f.write(f"Foot {i+1} to Base: {dist:.6f}\n")
 
 
+        f.write("\n\n\n\n")
+        f.write("------- CONSTRAINT INFORMATION --------\n")
         f.write("\nTest Constraints Information:\n")
         for idx, constraint in enumerate(tmls.test_constraints):
-            f.write(f"\tConstraint {idx+1}: {constraint}\n")
+            constraint_value = tmls.result.GetSolution(constraint.evaluator().Eval(tmls.result.GetSolution(constraint.variables())))
+            f.write(f"{constraint}{constraint_value}\n\n")
+
+        f.write("\nGIAC Constraints Information:\n")
+        print(len(tmls.giac_constraints))
+        for idx, constraint in enumerate(tmls.giac_constraints):
+            constraint_value = tmls.result.GetSolution(constraint.evaluator().Eval(tmls.result.GetSolution(constraint.variables())))
+            f.write(f"{constraint}{constraint_value}\n\n")
+
+        f.write("\nKinematic Constraints Information:\n")
+        for idx, constraint in enumerate(tmls.kinematic_constraints):
+            constraint_value = tmls.result.GetSolution(constraint.evaluator().Eval(tmls.result.GetSolution(constraint.variables())))
+            f.write(f"{constraint}{constraint_value}\n\n")
+
+
+
+        f.write("------- COST INFORMATION --------\n")
+        
+        f.write("\nTracking Costs Information:\n")
+        for idx, cost in enumerate(tmls.tracking_costs):
+            cost_value = tmls.result.GetSolution(cost.evaluator().Eval(tmls.result.GetSolution(cost.variables())))
+            f.write(f"Cost {idx+1}: {cost_value}\n")
+
+
+        f.write("\nFoothold On Ground Costs Information:\n")
+        for idx, cost in enumerate(tmls.foothold_on_ground_costs):
+            cost_value = tmls.result.GetSolution(cost.evaluator().Eval(tmls.result.GetSolution(cost.variables())))
+            f.write(f"Cost {idx+1}: {cost_value}\n")
+
+        

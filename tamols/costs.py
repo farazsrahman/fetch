@@ -8,7 +8,7 @@ from helpers import (
     get_R_B, get_stance_feet
 )
 from pydrake.symbolic import floor, ExtractVariablesFromExpression, Expression
-
+from pydrake.solvers import QuadraticConstraint, Cost
 
 def add_tracking_cost(tmls: TAMOLSState):
     """Cost to track reference trajectory"""
@@ -26,12 +26,13 @@ def add_tracking_cost(tmls: TAMOLSState):
         for tau in np.linspace(0, T_k, tmls.tau_sampling_rate+1)[:tmls.tau_sampling_rate]:
             vel = evaluate_spline_velocity(tmls, a_k, tau)[0:3]
 
-            for dim in range(3):
+            for dim in range(2): # ONLY TRACK X AND Y VEL
                 weight = 2 * T_k / tmls.tau_sampling_rate
                 total_cost += weight * (vel[dim] - tmls.ref_vel[dim])**2
 
-    tmls.prog.AddQuadraticCost(total_cost)
-   
+    c = tmls.prog.AddQuadraticCost(total_cost)
+    tmls.tracking_costs.append(c)
+    
 def add_foot_collision_cost(tmls: TAMOLSState):
     print("Adding foot collision cost...")
     raise NotImplementedError("add_foot_collision_cost is not yet implemented")
@@ -73,7 +74,6 @@ def add_foothold_on_ground_cost(tmls: TAMOLSState):
     """Cost to keep footholds on ground"""
     print("Adding foothold cost...")
 
-    e_z = np.array([0., 0., 1.])
     total_cost = 0
 
     for i in range(tmls.num_legs):
@@ -84,7 +84,8 @@ def add_foothold_on_ground_cost(tmls: TAMOLSState):
         cost = (h_pi - tmls.p[i][2])**2
         total_cost += 10 * cost
 
-    tmls.prog.AddCost(total_cost)
+    c = tmls.prog.AddCost(total_cost)
+    tmls.foothold_on_ground_costs.append(c)
 
 def add_nominal_kinematic_cost(tmls: TAMOLSState):
     """Cost for nominal kinematics"""
