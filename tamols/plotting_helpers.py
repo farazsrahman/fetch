@@ -115,7 +115,7 @@ def plot_optimal_solutions_interactive(tmls: TAMOLSState):
         )
     )
     # Save as HTML file for interactive viewing
-    fig.write_html('tamols/out/interactive_optimal_base_pose_and_footsteps.html')
+    fig.write_html('out/interactive_optimal_base_pose_and_footsteps.html')
 
 def plot_optimal_solutions(tmls: TAMOLSState):
     optimal_footsteps = tmls.optimal_footsteps
@@ -149,7 +149,8 @@ def plot_optimal_solutions(tmls: TAMOLSState):
     ax.set_title('Optimal Base Pose and Footsteps')
     ax.legend(loc='upper left', bbox_to_anchor=(1.05, 1), fontsize='small')
     
-    plt.savefig('tamols/out/optimal_base_pose_and_footsteps.png')
+    plt.savefig('out/optimal_base_pose_and_footsteps.png')
+
 
 def save_optimal_solutions(tmls: TAMOLSState, filepath='tamols/out/optimal_solution.txt'):
     optimal_footsteps = tmls.optimal_footsteps
@@ -167,7 +168,6 @@ def save_optimal_solutions(tmls: TAMOLSState, filepath='tamols/out/optimal_solut
             f.write(f"Spline Phase {i+1} Coefficients:\n")
             np.savetxt(f, optimal_spline_coeffs[i], fmt='%.6f')
             f.write("\n")
-
 
         f.write("\nObjective Function Optimal Value:\n")
         optimal_value = tmls.result.get_optimal_cost()  # Assuming this method exists
