@@ -115,7 +115,7 @@ def plot_optimal_solutions_interactive(tmls: TAMOLSState):
         )
     )
     # Save as HTML file for interactive viewing
-    fig.write_html('out/interactive_optimal_base_pose_and_footsteps.html')
+    fig.write_html('tamols/out/interactive_optimal_base_pose_and_footsteps.html')
 
 def plot_optimal_solutions(tmls: TAMOLSState):
     optimal_footsteps = tmls.optimal_footsteps
@@ -179,10 +179,12 @@ def save_optimal_solutions(tmls: TAMOLSState, filepath='tamols/out/optimal_solut
         ref_vel = tmls.ref_vel  # Assuming this attribute exists
         f.write(f"Reference Velocity: {ref_vel}\n")
 
-        f.write("\nVelocity at Time Steps Tau:\n")
-        for tau in tmls.taus_to_check:
-            velocity_at_tau = evaluate_spline_velocity(tmls, optimal_spline_coeffs[i], tau, 1)  # Assume T_k = 1 forall k
-            f.write(f"Velocity at tau={tau:.2f}: {np.array2string(velocity_at_tau, formatter={'float_kind':lambda x: f'{x:.4f}'})}\n")
+        # f.write("\nVelocity at Time Steps Tau:\n")
+        # for i in range(num_phases):
+        #     T_k = tmls.phase_durations[i]
+        #     for tau in np.linspace(0, T_k, tmls.tau_sampling_rate+1)[:tmls.tau_sampling_rate]:
+        #         velocity_at_tau = evaluate_spline_velocity(tmls, optimal_spline_coeffs[i], tau, 1)  # Assume T_k = 1 forall k
+        #         f.write(f"Velocity at tau={tau:.2f}: {np.array2string(velocity_at_tau, formatter={'float_kind':lambda x: f'{x:.4f}'})}\n")
 
         # FOOT DISTANCES AND COSTS
         f.write("\nFoot Distances and Associated Costs:\n")
@@ -199,7 +201,8 @@ def save_optimal_solutions(tmls: TAMOLSState, filepath='tamols/out/optimal_solut
         for leg_idx in range(tmls.num_legs):
             for phase_idx, at_des_pos in enumerate(tmls.gait_pattern['at_des_position']):
                 if at_des_pos[leg_idx]:
-                    for tau in tmls.taus_to_check:
+                    T_k = tmls.phase_durations[phase_idx]
+                    for tau in np.linspace(0, T_k, tmls.tau_sampling_rate+1)[:tmls.tau_sampling_rate]:
                         spline_coeffs_solution = tmls.result.GetSolution(tmls.spline_coeffs[phase_idx])
                         p_solution = tmls.result.GetSolution(tmls.p[leg_idx])
                         

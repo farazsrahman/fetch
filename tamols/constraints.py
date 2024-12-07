@@ -124,20 +124,17 @@ def add_kinematic_constraints(tmls: TAMOLSState):
     for leg_idx in range(tmls.num_legs):
         for phase_idx, at_des_pos in enumerate(tmls.gait_pattern['at_des_position']):
             if at_des_pos[leg_idx]:
-                for tau in tmls.taus_to_check:
+                T_k = tmls.phase_durations[phase_idx]
+                for tau in np.linspace(0, T_k, tmls.tau_sampling_rate+1)[:tmls.tau_sampling_rate]:
                     spline_pos = evaluate_spline_position(tmls, tmls.spline_coeffs[phase_idx], tau)[0:3]
                     hip_location = spline_pos + tmls.hip_offsets[leg_idx]
                     diff = tmls.p[leg_idx] - hip_location
-                    # tmls.prog.AddConstraint(
-                    #     np.linalg.norm(diff) <= tmls.l_max
-                    # )
 
                     tmls.prog.AddQuadraticConstraint(
                         diff.dot(diff),  # Quadratic expression
                         0, # quadratic lower bound is a non-convex constraint SKIP for now?
                         tmls.l_max**2
                     )
-
 
 def add_giac_constraints(tmls: TAMOLSState):
     """Enforce feet form a convex polygon"""
