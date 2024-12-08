@@ -14,8 +14,8 @@ class TAMOLSState:
     horizon_steps: int = 100
 
     # Height map data
-    cell_size: float = 0.03
-    map_size: int = 37
+    cell_size: float = 0.05
+    map_size: int = 19
     h: np.ndarray = None
     h_s1: np.ndarray = None
     h_s2: np.ndarray = None
@@ -45,7 +45,7 @@ class TAMOLSState:
         [-0.18, -0.08, 0],
     ]))
     l_min: float = 0.08
-    l_max: float = 0.6
+    l_max: float = 0.8
     h_des: float = 0.15
 
     # Current state

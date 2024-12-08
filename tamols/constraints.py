@@ -74,7 +74,7 @@ def add_dynamics_constraints(tmls: TAMOLSState):
             if N > 0: # Eq 17a: Friction cone constraint - FIXED
                 LHS = (mu * a_B[2])**2 - a_B[0]**2 - a_B[1]**2 
                 RHS = eps
-                # tmls.prog.AddConstraint(LHS >= RHS)
+                tmls.prog.AddConstraint(LHS >= RHS)
 
  
             if N >= 3: # Eq 17b: Multiple contact GIAC constraints
@@ -84,11 +84,11 @@ def add_dynamics_constraints(tmls: TAMOLSState):
                     p_j = tmls.p[j] if p_alr_at_des_pos[j] else tmls.p_meas[j]
                     p_ij = p_j - p_i
                     
-                    LHS = m * determinant(p_ij, p_B - p_i, a_B)
-                    RHS = eps + p_ij.dot(L_dot_B)
+                    LHS = m * determinant(p_ij, p_B - p_i, a_B) - p_ij.dot(L_dot_B)
+                    RHS = eps 
 
 
-                    # tmls.prog.AddConstraint(LHS <= RHS)
+                    tmls.prog.AddConstraint(LHS <= RHS)
                 
                     
             if N == 2: 

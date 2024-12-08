@@ -9,7 +9,6 @@ from pydrake.symbolic import cos, sin
 def evaluate_spline_position(tmls, coeffs, tau):
     return np.sum([coeffs[:, i] * tau**i for i in range(tmls.spline_order)], axis=0)
 
-
 def evaluate_spline_velocity(tmls, coeffs, tau):
     # returns vel and euler rates (0:3 and 3:6 respectively)
     return np.sum([i * coeffs[:, i] * tau**(i - 1) for i in range(1, tmls.spline_order)], axis=0)

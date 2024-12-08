@@ -36,7 +36,8 @@ def setup_test_state(tmls: TAMOLSState):
     ])  # Reasonable initial foot positions
 
     elevation_map = mhm.get_platform_heightmap(tmls)
-    # elevation_map = mhm.get_heightmap_with_holes()
+    # elevation_map = mhm.get_heightmap_with_holes(tmls)
+    # elevation_map = mhm.get_heightmap_stairs(tmls)
     
     h_s1, h_s2, gradients = process_height_maps(elevation_map)
 
@@ -48,7 +49,7 @@ def setup_test_state(tmls: TAMOLSState):
     tmls.h_s1_grad_x, tmls.h_s1_grad_y = gradients['h_s1']
     tmls.h_s2_grad_x, tmls.h_s2_grad_y = gradients['h_s2']
 
-    tmls.ref_vel = np.array([0.1, 0, 0])
+    tmls.ref_vel = np.array([0.5, 0, 0])
     tmls.ref_angular_momentum = np.array([0, 0, 0])
 
   
@@ -85,7 +86,7 @@ if __name__ == "__main__":
     # test specifc - hard coding final foot holds
 
     # .2m in front of robot
-    feet_positions = [[0.4, 0.1, 0], [0.4, -0.1, 0], [0, 0.1, 0], [0, -0.1, 0]]
+    feet_positions = [[0.3, 0.1, 0], [0.3, -0.1, 0], [-0.1, 0.1, 0], [-0.1, -0.1, 0]]
 
     # .2m in front of robot, .1m left, yaw 45 degrees
     # feet_positions = [
@@ -95,10 +96,10 @@ if __name__ == "__main__":
     #     [0.12929, -0.21213, 0.0]
     # ]
 
-    for leg_idx, pos in enumerate(feet_positions):
-        for dim in range(2): # just x, y pos (z handled by foot on ground cost
-            c = tmls.prog.AddLinearConstraint(tmls.p[leg_idx, dim] == pos[dim])
-            tmls.test_constraints.append(c)
+    # for leg_idx, pos in enumerate(feet_positions):
+    #     for dim in range(2): # just x, y pos (z handled by foot on ground cost
+    #         c = tmls.prog.AddLinearConstraint(tmls.p[leg_idx, dim] == pos[dim])
+    #         tmls.test_constraints.append(c)
 
     # CONSTRAINTS
     add_initial_constraints(tmls)
@@ -109,21 +110,21 @@ if __name__ == "__main__":
 
     
     # COSTS
-    # add_tracking_cost(tmls)
+    add_tracking_cost(tmls)
     add_foothold_on_ground_cost(tmls)
-    # add_nominal_kinematic_cost(tmls)
+    add_nominal_kinematic_cost(tmls)
+
+
     # add_base_pose_alignment_cost(tmls)
     # add_edge_avoidance_cost(tmls)
-
-
     # add_foot_collision_cost(tmls)
-    # add_test_cost(tmls)
 
     solver = SnoptSolver()
 
     print("Starting solve")
     tmls.result = solver.Solve(tmls.prog)
-    # result = Solve(tmls.prog)
+    print("Solver status:", tmls.result.get_solver_details().info)
+
     
     # Check if the problem is feasible
     if tmls.result.is_success():
@@ -140,4 +141,13 @@ if __name__ == "__main__":
         print("Optimization problem is not feasible.")
         print("Solver result code:", tmls.result.GetInfeasibleConstraints(tmls.prog))
 
-   
+        print("Optimization problem is not feasible.")
+        
+        # Print solver status
+        print("Solver status:", tmls.result.get_solver_details().info)
+        
+        # Print infeasible constraints
+        infeasible_constraints = tmls.result.GetInfeasibleConstraints(tmls.prog)
+        # print("Infeasible constraints:")
+        # for constraint in infeasible_constraints:
+        #     print(constraint)
