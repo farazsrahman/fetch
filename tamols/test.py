@@ -37,8 +37,8 @@ def setup_test_state(tmls: TAMOLSState):
         [-0.1934, -0.0465, 0] # Rear right leg
     ])  # Reasonable initial foot positions
 
-    # elevation_map = mhm.get_heightmap_stairs(tmls)
-    elevation_map = mhm.get_heightmap_with_holes(tmls)
+    elevation_map = mhm.get_heightmap_stairs(tmls)
+    # elevation_map = mhm.get_heightmap_with_holes(tmls)
     
     h_s1, h_s2, gradients = process_height_maps(elevation_map)
 
