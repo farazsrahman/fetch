@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 from pydrake.symbolic import Expression, Evaluate
 from tamols import TAMOLSState
-from helpers import evaluate_spline_velocity, evaluate_spline_position
+from helpers import evaluate_spline_velocity, evaluate_spline_position, get_R_B_numerical
 
 
 def plot_optimal_solutions_interactive(tmls: TAMOLSState, filepath='out/interactive_optimal_base_pose_and_footsteps.html'):
@@ -98,6 +98,44 @@ def plot_optimal_solutions_interactive(tmls: TAMOLSState, filepath='out/interact
                 showlegend=True
             ))
     
+
+    # Plot rectangles centered at the initial and final base poses
+    for phase in [0, num_phases - 1]:
+        a_k = optimal_spline_coeffs[phase]
+        T_k = tmls.phase_durations[phase]
+        
+        # Get the base pose at the start and end of the spline
+        if phase == 0:
+            base_pose = evaluate_spline_position(tmls, a_k, 0)[:3]
+            phi_B = evaluate_spline_position(tmls, a_k, 0)[3:6]
+        else:
+            base_pose = evaluate_spline_position(tmls, a_k, T_k)[:3]
+            phi_B = evaluate_spline_position(tmls, a_k, T_k)[3:6]
+
+        R_B = get_R_B_numerical(phi_B)
+  
+
+        # Calculate the corners of the rectangle
+        corners = []
+        for offset in tmls.hip_offsets:
+            corner = base_pose + R_B.dot(offset)
+            corners.append(corner)
+        
+        # Create the rectangle by connecting the corners in the order 1-2-4-3
+        corner_order = [0, 1, 3, 2, 0] 
+        for i in range(len(corner_order) - 1):
+            fig.add_trace(go.Scatter3d(
+                x=[corners[corner_order[i]][0], corners[corner_order[i + 1]][0]],
+                y=[corners[corner_order[i]][1], corners[corner_order[i + 1]][1]],
+                z=[corners[corner_order[i]][2], corners[corner_order[i + 1]][2]],
+                mode='lines',
+                name=f'Rectangle Phase {phase+1}',
+                line=dict(color='green', width=2),
+                showlegend=False
+            ))
+
+
+
     # Update layout - THIS IS WHERE SIZE OF PLOT SET
     fig.update_layout(
         title='Optimal Base Pose and Footsteps',

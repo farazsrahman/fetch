@@ -119,7 +119,7 @@ def run_single_optimization(tmls: TAMOLSState):
         print("Optimization problem is not feasible.")
         print("Solver result code:", tmls.result.GetInfeasibleConstraints(tmls.prog))
         return False
-
+    
 def setup_next_optimization(prev_tmls: TAMOLSState):
     """Creates new TAMOLS state using results from previous optimization"""
     new_tmls = TAMOLSState()
@@ -177,7 +177,4 @@ if __name__ == "__main__":
         if run_single_optimization(tmls2):
             plot_optimal_solutions_interactive(tmls2, filepath='out/interactive_optimal_base_pose_and_footsteps2.html')
             save_optimal_solutions(tmls2, filepath='out/optimal_solution2.txt')
-
-    
-
    

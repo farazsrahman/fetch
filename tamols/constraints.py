@@ -91,6 +91,8 @@ def add_dynamics_constraints(tmls: TAMOLSState):
                     
                     LHS = m * determinant(p_ij, p_B - p_i, a_B) - p_ij.dot(L_dot_B)
                     RHS = eps 
+                    LHS = m * determinant(p_ij, p_B - p_i, a_B) - p_ij.dot(L_dot_B)
+                    RHS = eps 
 
 
                     tmls.prog.AddConstraint(LHS <= RHS)

@@ -64,3 +64,4 @@ def get_heightmap_stairs(tmls):
     for i in range(middle_index, grid_size, 4):
         elevation_map[i:i+4, :] = step_height * ((i - middle_index) // 4 + 1)
     return elevation_map
+

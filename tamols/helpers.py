@@ -9,7 +9,6 @@ from pydrake.symbolic import cos, sin
 def evaluate_spline_position(tmls, coeffs, tau):
     return np.sum([coeffs[:, i] * tau**i for i in range(tmls.spline_order)], axis=0)
 
-
 def evaluate_spline_velocity(tmls, coeffs, tau):
     # returns vel and euler rates (0:3 and 3:6 respectively)
     return np.sum([i * coeffs[:, i] * tau**(i - 1) for i in range(1, tmls.spline_order)], axis=0)
@@ -176,3 +175,43 @@ def get_R_B(phi_B):
     R_B = R_z @ R_y @ R_x
 
     return R_B
+
+
+def get_R_B_numerical(phi_B):
+    """
+    Calculate rotation matrix R_B from ZYX-Euler angles
+    Args:
+        phi_B: [psi, theta, phi] ZYX-Euler angles of the base
+    Returns:
+        3x3 rotation matrix R_B
+    """
+    # Create RollPitchYaw object from Euler angles
+    # Note: RollPitchYaw expects [roll, pitch, yaw] = [phi, theta, psi]
+    # So we need to reverse the order from [psi, theta, phi]
+    psi, theta, phi = phi_B  # [Yaw, Pitch, Roll]
+
+    assert isinstance(phi_B, np.ndarray)
+    assert phi_B.dtype == np.float64
+
+    # Define rotation matrices for each axis
+    R_z = np.array([
+        [np.cos(psi), -np.sin(psi), 0],
+        [np.sin(psi), np.cos(psi), 0],
+        [0, 0, 1]
+    ])
+    R_y = np.array([
+        [np.cos(theta), 0, np.sin(theta)],
+        [0, 1, 0],
+        [-np.sin(theta), 0, np.cos(theta)]
+    ])
+    R_x = np.array([
+        [1, 0, 0],
+        [0, np.cos(phi), -np.sin(phi)],
+        [0, np.sin(phi), np.cos(phi)]
+    ])
+
+    # Combine rotations (ZYX convention)
+    R_B = R_z @ R_y @ R_x
+
+    return R_B
+
