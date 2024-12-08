@@ -14,6 +14,8 @@ class TAMOLSState:
     horizon_steps: int = 100
 
     # Height map data
+    cell_size: float = 0.03
+    map_size: int = 37
     h: np.ndarray = None
     h_s1: np.ndarray = None
     h_s2: np.ndarray = None

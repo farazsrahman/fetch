@@ -1,22 +1,21 @@
 import numpy as np
 
-GRID_SIZE = 12
 
-def get_flat_heightmap():
-    return np.zeros((GRID_SIZE, GRID_SIZE))
+def get_flat_heightmap(tmls):
+    return np.zeros((tmls.map_size, tmls.map_size))
 
 
-def get_platform_heightmap():
-    grid_size = GRID_SIZE  # 50 x 0.04 = 2 meters
+def get_platform_heightmap(tmls):
+    grid_size = tmls.map_size  # 50 x 0.04 = 2 meters
     elevation_map = np.zeros((grid_size, grid_size))
 
-    platform_size_x = 10
-    platform_size_y = 5
+    platform_size_x = grid_size // 2
+    platform_size_y = grid_size // 2
     platform_height = 0.05
 
-    start_x = 5 + (grid_size - platform_size_x) // 2
+    start_x = (grid_size - platform_size_x) // 2
     end_x = start_x + platform_size_x
-    start_y = -5 + (grid_size - platform_size_y) // 2
+    start_y = (grid_size - platform_size_y) // 2
     end_y = start_y + platform_size_y
 
     # Add the raised square platform
@@ -25,8 +24,8 @@ def get_platform_heightmap():
     return elevation_map  
 
 
-def get_random_rough_heightmap():
-    grid_size = GRID_SIZE
+def get_random_rough_heightmap(tmls):
+    grid_size = tmls.map_size
     elevation_map = np.random.rand(grid_size, grid_size) * 0.05
 
     # Smooth the heightmap by averaging with neighbors
@@ -37,8 +36,8 @@ def get_random_rough_heightmap():
     return elevation_map
 
 
-def get_heightmap_with_holes():
-    grid_size = GRID_SIZE
+def get_heightmap_with_holes(tmls):
+    grid_size = tmls.map_size
     elevation_map = np.random.rand(grid_size, grid_size) * 0.05
     drop_height = 0.75
 

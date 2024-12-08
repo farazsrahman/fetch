@@ -82,6 +82,8 @@ def add_foothold_on_ground_cost(tmls: TAMOLSState):
         
         # Add to cost using interpolated height
         cost = (h_pi - tmls.p[i][2])**2
+        # if i is 0:
+        #     cost = (0.05 - tmls.p[i][2])**2
         total_cost += 10 * cost
 
     c = tmls.prog.AddCost(total_cost)

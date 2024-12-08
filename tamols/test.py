@@ -35,7 +35,7 @@ def setup_test_state(tmls: TAMOLSState):
         [-0.2, -0.1, 0] # Rear right leg
     ])  # Reasonable initial foot positions
 
-    elevation_map = mhm.get_random_rough_heightmap()
+    elevation_map = mhm.get_platform_heightmap(tmls)
     # elevation_map = mhm.get_heightmap_with_holes()
     
     h_s1, h_s2, gradients = process_height_maps(elevation_map)
@@ -97,8 +97,8 @@ if __name__ == "__main__":
 
     
     # COSTS
-    add_tracking_cost(tmls)
-    # add_foothold_on_ground_cost(tmls)
+    # add_tracking_cost(tmls)
+    add_foothold_on_ground_cost(tmls)
     # add_nominal_kinematic_cost(tmls)
     # add_base_pose_alignment_cost(tmls)
     # add_edge_avoidance_cost(tmls)

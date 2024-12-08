@@ -151,8 +151,9 @@ def plot_optimal_solutions_interactive(tmls: TAMOLSState):
     # Plot height map
     height_map = tmls.h
     grid_size = height_map.shape[0]
-    x = np.linspace(-0.5, 0.5, grid_size)
-    y = np.linspace(-0.5, 0.5, grid_size)
+    boundary = grid_size * tmls.cell_size / 2
+    x = np.linspace(-boundary, boundary, grid_size)
+    y = np.linspace(-boundary, boundary, grid_size)
     x, y = np.meshgrid(x, y)
     z = height_map
 

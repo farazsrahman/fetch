@@ -87,12 +87,12 @@ def add_dynamics_constraints(tmls: TAMOLSState):
                     
 
                     LHS = m * determinant(p_ij, p_B - p_i, a_B)
-                    RHS = (1 + eps) * p_ij.dot(L_dot_B)
+                    RHS = eps + p_ij.dot(L_dot_B)
 
                     tmls.prog.AddConstraint(LHS <= RHS)
                 
                     
-            elif N == 2: 
+            if N == 2: 
                 # Eq 17c,d: Double support constraints
                 i, j = stance_feet
                 p_i = tmls.p[i] if p_alr_at_des_pos[i] else tmls.p_meas[i]
@@ -100,18 +100,18 @@ def add_dynamics_constraints(tmls: TAMOLSState):
                 p_ij = p_j - p_i
                 
                 # 17c: Equality constraint
-                # print(f"adding N={N} constraint 17c")
-                # tmls.prog.AddConstraint(
-                #     m * determinant(p_ij, p_B - p_i, a_B) == 
-                #     p_ij.dot(L_dot_B)
-                # )
+                print(f"adding N={N} constraint 17c")
+                tmls.prog.AddConstraint(
+                    m * determinant(p_ij, p_B - p_i, a_B) == 
+                    p_ij.dot(L_dot_B)
+                )
                 
                 # 17d: Moment constraint
                 # print(f"adding N={N} constraint 17d")
                 M_i = m * np.cross(p_B - p_i, a_B) - L_dot_B
                 cost = determinant(e_z, p_ij, M_i)
                 
-                # tmls.prog.AddConstraint(cost >= 0)
+                tmls.prog.AddConstraint(cost >= 0)
 
             # SKIP N < 2 CASES FOR NOW
 

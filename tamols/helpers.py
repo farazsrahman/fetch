@@ -98,19 +98,19 @@ def get_stance_feet(tmls, phase):
 
 def evaluate_height_at_symbolic_xy(tmls, height_map, x, y):
     m, n = height_map.shape # NOTE: SHOULD BE SQUARE
-    grid_size = 0.04
-    offset = 0.5 # assume 1m x 1m map then .5m offset takes you to the center
-    i = (x + offset) / grid_size
-    j = (y + offset) / grid_size
+    cell_size = tmls.cell_size
+    offset = tmls.cell_size * tmls.map_size / 2 # move zero to the center
+    i = (x + offset) / cell_size
+    j = (y + offset) / cell_size
     total_height = 0
 
     for k in range(m):
         for l in range(n):
-            partial_height = if_then_else(abs(i - k) < 1,
+            partial_height = if_then_else(abs(i - k) < 1, 
                                           if_then_else(abs(j - l) < 1, 
-                                                       height_map[k, l] * (1 - abs(i - k)) * (1 - abs(j - l)), 
-                                                       0), 
-                                            0)
+                                                       height_map[k, l] * (1 - abs(i - k)) * (1 - abs(j - l)),
+                                                         0), 
+                                          0)
             total_height += partial_height
 
     return total_height
