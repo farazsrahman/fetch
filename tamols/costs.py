@@ -60,12 +60,21 @@ def add_foot_collision_cost(tmls: TAMOLSState):
 def add_test_cost(tmls: TAMOLSState):
     print("Adding test cost...")
     total_cost = 0
-    num_legs = tmls.num_legs
 
-    footstep_1 = tmls.p[0]
-    target_point = np.array([0.5, 0.5, 0])
-    distance = np.linalg.norm(footstep_1 - target_point)
-    total_cost += distance**2 
+    # Encourage the model to rotate 90 degrees left in ZYX Euler coordinates at the end of the base pose trajectory
+    num_phases = len(tmls.phase_durations)
+    a_k = tmls.spline_coeffs[-1]  # Get the coefficients for the last phase
+    T_k = tmls.phase_durations[-1]  # Get the duration for the last phase
+
+    # Get the base pose at the end of the last phase
+    phi_B_end = evaluate_spline_position(tmls, a_k, T_k)[3:6]
+
+    # Desired rotation is 90 degrees left around the Z-axis in ZYX Euler coordinates
+    desired_rotation = np.array([np.pi / 2, 0, 0])
+
+    # Calculate the cost as the squared difference between the current and desired rotation
+    rotation_cost = np.sum((phi_B_end - desired_rotation) ** 2)
+    total_cost += rotation_cost
 
     tmls.prog.AddCost(total_cost)
 

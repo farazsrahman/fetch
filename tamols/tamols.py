@@ -39,10 +39,10 @@ class TAMOLSState:
 
     # Leg configuration
     hip_offsets: np.ndarray = field(default_factory=lambda: np.array([
-        [0.2, 0.15, 0],
-        [0.2, -0.15, 0],
-        [-0.2, 0.15, 0],
-        [-0.2, -0.15, 0],
+        [0.18, 0.08, 0],
+        [0.18, -0.08, 0],
+        [-0.18, 0.08, 0],
+        [-0.18, -0.08, 0],
     ]))
     l_min: float = 0.08
     l_max: float = 0.6

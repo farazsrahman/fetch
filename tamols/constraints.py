@@ -53,7 +53,6 @@ def add_dynamics_constraints(tmls: TAMOLSState):
     # Constants
     num_phases = len(tmls.phase_durations)
     e_z = np.array([0., 0., 1.])
-    I_3 = np.eye(3)
     mu = tmls.mu
     m = tmls.mass
 
@@ -73,9 +72,9 @@ def add_dynamics_constraints(tmls: TAMOLSState):
             L_dot_B = evaluate_angular_momentum_derivative(tmls, a_k, tau)[0:3]
             
             if N > 0: # Eq 17a: Friction cone constraint - FIXED
-                LHS = (mu * a_B[2])**2 # e_X ^T aB
-                RHS = eps + a_B[0]**2 + a_B[1]**2
-                tmls.prog.AddConstraint(LHS >= RHS)
+                LHS = (mu * a_B[2])**2 - a_B[0]**2 - a_B[1]**2 
+                RHS = eps
+                # tmls.prog.AddConstraint(LHS >= RHS)
 
  
             if N >= 3: # Eq 17b: Multiple contact GIAC constraints
@@ -86,10 +85,15 @@ def add_dynamics_constraints(tmls: TAMOLSState):
                     p_ij = p_j - p_i
                     
 
+<<<<<<< Updated upstream
                     LHS = m * determinant(p_ij, p_B - p_i, a_B)
                     RHS = eps + p_ij.dot(L_dot_B)
+=======
+                    LHS = m * determinant(p_ij, p_B - p_i, a_B) - p_ij.dot(L_dot_B)
+                    RHS = eps 
+>>>>>>> Stashed changes
 
-                    tmls.prog.AddConstraint(LHS <= RHS)
+                    # tmls.prog.AddConstraint(LHS <= RHS)
                 
                     
             if N == 2: 
@@ -195,3 +199,6 @@ def add_giac_constraints(tmls: TAMOLSState):
     constraint_4 = tmls.prog.AddConstraint(p_24[0] * p_21[1] - p_24[1] * p_21[0] <= 0)
     tmls.giac_constraints.append(constraint_4)
 
+
+
+    # TODO ADD GIAC CONSTRAINTS FOR INTERMEDIATE GAIT

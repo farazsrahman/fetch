@@ -83,14 +83,26 @@ if __name__ == "__main__":
     setup_variables(tmls)
 
     # test specifc - hard coding final foot holds
-    for leg_idx, pos in enumerate([[0.4, 0.1, 0], [0.4, -0.1, 0], [0, 0.1, 0], [0, -0.1, 0]]):
+
+    # .2m in front of robot
+    feet_positions = [[0.4, 0.1, 0], [0.4, -0.1, 0], [0, 0.1, 0], [0, -0.1, 0]]
+
+    # .2m in front of robot, .1m left, yaw 45 degrees
+    # feet_positions = [
+    #     [0.27071, 0.21213, 0.0],
+    #     [0.41213, 0.07071, 0.0],
+    #     [-0.01213, -0.07071, 0.0],
+    #     [0.12929, -0.21213, 0.0]
+    # ]
+
+    for leg_idx, pos in enumerate(feet_positions):
         for dim in range(2): # just x, y pos (z handled by foot on ground cost
             c = tmls.prog.AddLinearConstraint(tmls.p[leg_idx, dim] == pos[dim])
             tmls.test_constraints.append(c)
 
     # CONSTRAINTS
     add_initial_constraints(tmls)
-    # add_dynamics_constraints(tmls)
+    add_dynamics_constraints(tmls)
     add_kinematic_constraints(tmls) # for some reason problem becomes infeasible without this
     add_giac_constraints(tmls)
     add_friction_cone_constraints(tmls)
