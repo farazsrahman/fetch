@@ -5,7 +5,7 @@ from pydrake.math import exp, abs, sqrt
 from helpers import (
     evaluate_spline_position, evaluate_spline_velocity, 
     evaluate_height_at_symbolic_xy,
-    get_R_B, get_stance_feet
+    get_R_B, get_stance_feet, evaluate_angular_momentum_derivative
 )
 from pydrake.symbolic import floor, ExtractVariablesFromExpression, Expression
 from pydrake.solvers import QuadraticConstraint, Cost
@@ -26,7 +26,7 @@ def add_tracking_cost(tmls: TAMOLSState):
         for tau in np.linspace(0, T_k, tmls.tau_sampling_rate+1)[:tmls.tau_sampling_rate]:
             vel = evaluate_spline_velocity(tmls, a_k, tau)[0:3]
 
-            for dim in range(2): # ONLY TRACK X AND Y VEL
+            for dim in range(1): # ONLY TRACK X VEL
                 weight = 2 * T_k / tmls.tau_sampling_rate
                 total_cost += weight * (vel[dim] - tmls.ref_vel[dim])**2
 
@@ -84,7 +84,7 @@ def add_foothold_on_ground_cost(tmls: TAMOLSState):
         cost = (h_pi - tmls.p[i][2])**2
         # if i is 0:
         #     cost = (0.05 - tmls.p[i][2])**2
-        total_cost += 10 * cost
+        total_cost += 10**2 * cost
 
     c = tmls.prog.AddCost(total_cost)
     tmls.foothold_on_ground_costs.append(c)
@@ -114,10 +114,11 @@ def add_nominal_kinematic_cost(tmls: TAMOLSState):
             base_minus_leg = p_B + R_B.dot(tmls.hip_offsets[i]) - l_des
             p_i = tmls.p[i] if p_alr_at_des_pos[i] else tmls.p_meas[i]
             cost = np.dot(base_minus_leg - p_i, base_minus_leg - p_i)
-            weight = 1
+            weight = 7
             total_cost += weight * cost
 
-    tmls.prog.AddCost(total_cost)
+    c = tmls.prog.AddCost(total_cost)
+    tmls.nominal_kinematic_costs.append(c)
 
 def add_base_pose_alignment_cost(tmls: TAMOLSState):
     """Cost to align base on ground"""
@@ -144,10 +145,11 @@ def add_base_pose_alignment_cost(tmls: TAMOLSState):
                 base_minus_leg = p_B + R_B.dot(tmls.hip_offsets[i]) - l_des
                 # base_minus_leg = p_B - l_des
                 cost = (e_z.dot(base_minus_leg) - hs2_pB)**2
-                weight = 0.1 * T_k / tmls.tau_sampling_rate
+                weight = 0.01 * T_k / tmls.tau_sampling_rate
                 total_cost += weight * cost
 
-    tmls.prog.AddCost(total_cost)
+    c = tmls.prog.AddCost(total_cost)
+    tmls.base_pose_alignment_costs.append(c)
 
 
 def add_edge_avoidance_cost(tmls: TAMOLSState):
@@ -167,8 +169,60 @@ def add_edge_avoidance_cost(tmls: TAMOLSState):
         h_s1_grad_pi = np.array([h_s1_grad_x_pi, h_s1_grad_y_pi])
         
         # Add to cost using interpolated height
-        cost = h_grad_pi.dot(h_grad_pi) + h_s1_grad_pi.dot(h_s1_grad_pi)
+        cost = 3 * h_grad_pi.dot(h_grad_pi) + h_s1_grad_pi.dot(h_s1_grad_pi)
         total_cost += cost
 
-    tmls.prog.AddCost(total_cost)
+    c = tmls.prog.AddCost(total_cost)
+    tmls.edge_avoidance_costs.append(c)
+
+def add_previous_solution_cost(tmls: TAMOLSState):
+    """Cost to keep relative closeness to previous solution"""
+    print("Adding previous solution cost...")
+
+    total_cost = 0
+
+    for i in range(tmls.num_legs):
+        difference_squared = (tmls.p[i] - tmls.p_meas[i])**2
+        cost = np.sum(difference_squared)
+        
+        total_cost += 0.01 * cost
+
+    c = tmls.prog.AddQuadraticCost(total_cost)
+    tmls.previous_solution_costs.append(c)
+
+def add_previous_solution_cost(tmls: TAMOLSState):
+    """Cost to keep relative closeness to previous solution"""
+    print("Adding previous solution cost...")
+
+    total_cost = 0
+
+    for i in range(tmls.num_legs):
+        difference_squared = (tmls.p[i] - tmls.p_meas[i])**2
+        cost = np.sum(difference_squared)
+        
+        total_cost += 0.01 * cost
+
+    c = tmls.prog.AddQuadraticCost(total_cost)
+    tmls.previous_solution_costs.append(c)
+
+def add_smoothness_cost(tmls: TAMOLSState):
+    """Cost to keep relative closeness to previous solution"""
+    print("Adding previous solution cost...")
+
+    total_cost = 0
+
+    num_phases = len(tmls.phase_durations)
+    for phase in range(num_phases):
+        a_k = tmls.spline_coeffs[phase]
+        T_k = tmls.phase_durations[phase]
+
+        for tau in np.linspace(0, T_k, tmls.tau_sampling_rate+1)[:tmls.tau_sampling_rate]:
+            L_dot_B = evaluate_angular_momentum_derivative(tmls, a_k, tau)[0:3]
+
+            cost = L_dot_B.dot(L_dot_B)
+            weight = 0.001 * T_k / tmls.tau_sampling_rate
+            total_cost += weight * cost
+
+    c = tmls.prog.AddCost(total_cost)
+    tmls.smoothness_costs.append(c)
 

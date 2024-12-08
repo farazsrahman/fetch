@@ -6,7 +6,7 @@ from tamols import TAMOLSState
 from helpers import evaluate_spline_velocity, evaluate_spline_position
 
 
-def plot_optimal_solutions_interactive(tmls: TAMOLSState):
+def plot_optimal_solutions_interactive(tmls: TAMOLSState, filepath='out/interactive_optimal_base_pose_and_footsteps.html'):
     optimal_footsteps = tmls.optimal_footsteps
     optimal_spline_coeffs = tmls.optimal_spline_coeffs
     num_phases = tmls.num_phases
@@ -154,7 +154,7 @@ def plot_optimal_solutions_interactive(tmls: TAMOLSState):
     boundary = grid_size * tmls.cell_size / 2
     x = np.linspace(-boundary, boundary, grid_size)
     y = np.linspace(-boundary, boundary, grid_size)
-    x, y = np.meshgrid(x, y)
+    x, y = np.meshgrid(x, y, indexing='ij')
     z = height_map
 
     # Add height map surface plot
@@ -162,7 +162,7 @@ def plot_optimal_solutions_interactive(tmls: TAMOLSState):
 
 
     # Save as HTML file for interactive viewing
-    fig.write_html('out/interactive_optimal_base_pose_and_footsteps.html')
+    fig.write_html(filepath)
 
 
 def save_optimal_solutions(tmls: TAMOLSState, filepath='out/optimal_solution.txt'):
