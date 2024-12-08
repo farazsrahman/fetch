@@ -17,7 +17,9 @@ from costs import (
     add_foothold_on_ground_cost,
     add_base_pose_alignment_cost,
     add_nominal_kinematic_cost,
-    add_edge_avoidance_cost
+    add_edge_avoidance_cost,
+    add_previous_solution_cost,
+    add_smoothness_cost
 )
 from plotting_helpers import *
 from map_processing import *
@@ -26,18 +28,17 @@ import manual_heightmaps as mhm
 def setup_test_state(tmls: TAMOLSState):
      # Create a TAMOLSState instance
 
-    tmls.base_pose = np.array([0, 0, 0.15, 0, 0, 0])  # Example initial base pose
+    tmls.base_pose = np.array([0, 0, 0.25, 0, 0, 0])  # Example initial base pose
     tmls.base_vel = np.array([0, 0, 0, 0, 0, 0])   # Example initial base velocity
     tmls.p_meas = np.array([
-        [0.2, 0.1, 0],  # Front left leg
-        [0.2, -0.1, 0], # Front right leg
-        [-0.2, 0.1, 0], # Rear left leg
-        [-0.2, -0.1, 0] # Rear right leg
+        [0.1934, 0.0465, 0],  # Front left leg
+        [0.1934, -0.0465, 0], # Front right leg
+        [-0.1934, 0.0465, 0], # Rear left leg
+        [-0.1934, -0.0465, 0] # Rear right leg
     ])  # Reasonable initial foot positions
 
-    elevation_map = mhm.get_platform_heightmap(tmls)
-    # elevation_map = mhm.get_heightmap_with_holes(tmls)
     # elevation_map = mhm.get_heightmap_stairs(tmls)
+    elevation_map = mhm.get_heightmap_with_holes(tmls)
     
     h_s1, h_s2, gradients = process_height_maps(elevation_map)
 
@@ -74,33 +75,8 @@ def setup_test_state(tmls: TAMOLSState):
             [1, 1, 1, 1],
         ],
     }
-    
 
-if __name__ == "__main__":
-
-    # SETUP
-    tmls = TAMOLSState()
-    setup_test_state(tmls)
-    setup_variables(tmls)
-
-    # test specifc - hard coding final foot holds
-
-    # .2m in front of robot
-    feet_positions = [[0.3, 0.1, 0], [0.3, -0.1, 0], [-0.1, 0.1, 0], [-0.1, -0.1, 0]]
-
-    # .2m in front of robot, .1m left, yaw 45 degrees
-    # feet_positions = [
-    #     [0.27071, 0.21213, 0.0],
-    #     [0.41213, 0.07071, 0.0],
-    #     [-0.01213, -0.07071, 0.0],
-    #     [0.12929, -0.21213, 0.0]
-    # ]
-
-    # for leg_idx, pos in enumerate(feet_positions):
-    #     for dim in range(2): # just x, y pos (z handled by foot on ground cost
-    #         c = tmls.prog.AddLinearConstraint(tmls.p[leg_idx, dim] == pos[dim])
-    #         tmls.test_constraints.append(c)
-
+def setup_costs_and_constraints(tmls: TAMOLSState):
     # CONSTRAINTS
     add_initial_constraints(tmls)
     add_dynamics_constraints(tmls)
@@ -113,41 +89,92 @@ if __name__ == "__main__":
     add_tracking_cost(tmls)
     add_foothold_on_ground_cost(tmls)
     add_nominal_kinematic_cost(tmls)
-
-
     # add_base_pose_alignment_cost(tmls)
     # add_edge_avoidance_cost(tmls)
-    # add_foot_collision_cost(tmls)
+    # add_previous_solution_cost(tmls)
+    # add_smoothness_cost(tmls)
 
+def run_single_optimization(tmls: TAMOLSState):
     solver = SnoptSolver()
 
-    print("Starting solve")
-    tmls.result = solver.Solve(tmls.prog)
-    print("Solver status:", tmls.result.get_solver_details().info)
+    open('snopt.out', 'w').close()
+    open('snopt.txt', 'w').close()
 
+    print("Starting solve")
+    tmls.prog.SetSolverOption(SnoptSolver().solver_id(), "Print file", "snopt.out")
+    tmls.prog.SetSolverOption(SnoptSolver().solver_id(), "Summary file", "snopt.txt")
+    tmls.prog.SetSolverOption(SnoptSolver().solver_id(), "Print frequency", 1)
+    tmls.prog.SetSolverOption(SnoptSolver().solver_id(), "Major feasibility tolerance", 1e-6)
+    tmls.prog.SetSolverOption(SnoptSolver().solver_id(), "Major optimality tolerance", 2e-2)
+
+    tmls.result = solver.Solve(tmls.prog)
     
-    # Check if the problem is feasible
     if tmls.result.is_success():
         print("Optimization problem is feasible.")
-
         tmls.optimal_footsteps = tmls.result.GetSolution(tmls.p)
         num_phases = len(tmls.gait_pattern['phase_timing']) - 1
         tmls.optimal_spline_coeffs = [tmls.result.GetSolution(tmls.spline_coeffs[i]) for i in range(num_phases)]
-
-        plot_optimal_solutions_interactive(tmls)
-        save_optimal_solutions(tmls)
-
+        return True
     else:
         print("Optimization problem is not feasible.")
         print("Solver result code:", tmls.result.GetInfeasibleConstraints(tmls.prog))
+        return False
+    
+def setup_next_optimization(prev_tmls: TAMOLSState):
+    """Creates new TAMOLS state using results from previous optimization"""
+    new_tmls = TAMOLSState()
+    
+    # Copy over static parameters and maps
+    new_tmls.h = prev_tmls.h
+    new_tmls.h_s1 = prev_tmls.h_s1
+    new_tmls.h_s2 = prev_tmls.h_s2
+    new_tmls.h_grad_x = prev_tmls.h_grad_x
+    new_tmls.h_grad_y = prev_tmls.h_grad_y
+    new_tmls.h_s1_grad_x = prev_tmls.h_s1_grad_x
+    new_tmls.h_s1_grad_y = prev_tmls.h_s1_grad_y
+    new_tmls.h_s2_grad_x = prev_tmls.h_s2_grad_x
+    new_tmls.h_s2_grad_y = prev_tmls.h_s2_grad_y
+    
+    # Use final state from previous optimization as initial state
+    final_phase_coeff = prev_tmls.optimal_spline_coeffs[-1]
+    T_final = prev_tmls.phase_durations[-1]
+    
+    # Get final base pose and velocity
+    final_pose = evaluate_spline_position(prev_tmls, final_phase_coeff, T_final)
+    final_vel = evaluate_spline_velocity(prev_tmls, final_phase_coeff, T_final)
+    
+    # Offset x position for continuing motion
+    new_tmls.base_pose = final_pose
+    new_tmls.base_vel = final_vel
+    
+    # Use final footsteps as initial footsteps
+    new_tmls.p_meas = prev_tmls.optimal_footsteps.copy()
+    
+    # Copy over gait pattern and other parameters
+    new_tmls.gait_pattern = prev_tmls.gait_pattern
+    new_tmls.ref_vel = prev_tmls.ref_vel
+    new_tmls.ref_angular_momentum = prev_tmls.ref_angular_momentum
+    
+    return new_tmls
+    
 
-        print("Optimization problem is not feasible.")
-        
-        # Print solver status
-        print("Solver status:", tmls.result.get_solver_details().info)
-        
-        # Print infeasible constraints
-        infeasible_constraints = tmls.result.GetInfeasibleConstraints(tmls.prog)
-        # print("Infeasible constraints:")
-        # for constraint in infeasible_constraints:
-        #     print(constraint)
+if __name__ == "__main__":
+
+    # SETUP
+    tmls1 = TAMOLSState()
+    setup_test_state(tmls1)
+    setup_variables(tmls1)
+    setup_costs_and_constraints(tmls1)
+
+    if run_single_optimization(tmls1):
+        plot_optimal_solutions_interactive(tmls1, filepath='out/interactive_optimal_base_pose_and_footsteps1.html')
+        save_optimal_solutions(tmls1, filepath='out/optimal_solution1.txt')
+
+        tmls2 = setup_next_optimization(tmls1)
+        setup_variables(tmls2)
+        setup_costs_and_constraints(tmls2)
+
+        if run_single_optimization(tmls2):
+            plot_optimal_solutions_interactive(tmls2, filepath='out/interactive_optimal_base_pose_and_footsteps2.html')
+            save_optimal_solutions(tmls2, filepath='out/optimal_solution2.txt')
+   

@@ -15,7 +15,7 @@ class TAMOLSState:
 
     # Height map data
     cell_size: float = 0.05
-    map_size: int = 19
+    map_size: int = 27
     h: np.ndarray = None
     h_s1: np.ndarray = None
     h_s2: np.ndarray = None
@@ -32,21 +32,21 @@ class TAMOLSState:
     base_dims: int = 6
 
     # Physical parameters
-    mass: float = 1.0
+    mass: float = 6.921
     mu: float = 0.7
     # TODO: find something reasonable for this
-    moment_of_inertia: np.ndarray = field(default_factory=lambda: np.diag([0.07, 0.26, 0.242]))
+    moment_of_inertia: np.ndarray = field(default_factory=lambda: np.diag([0.02448, 0.098077, 0.107]))
 
     # Leg configuration
     hip_offsets: np.ndarray = field(default_factory=lambda: np.array([
-        [0.18, 0.08, 0],
-        [0.18, -0.08, 0],
-        [-0.18, 0.08, 0],
-        [-0.18, -0.08, 0],
+        [0.1934, 0.0465, 0],   # FL - from FL_hip_joint origin
+        [0.1934, -0.0465, 0],  # FR - from FR_hip_joint origin
+        [-0.1934, 0.0465, 0],  # RL - from RL_hip_joint origin
+        [-0.1934, -0.0465, 0], # RR - from RR_hip_joint origin
     ]))
-    l_min: float = 0.08
-    l_max: float = 0.8
-    h_des: float = 0.15
+    l_min: float = 0.15
+    l_max: float = 0.4
+    h_des: float = 0.25
 
     # Current state
     p_meas: np.ndarray = None
@@ -88,6 +88,8 @@ class TAMOLSState:
     nominal_kinematic_costs: List[Cost] = field(default_factory=list)
     base_pose_alignment_costs: List[Cost] = field(default_factory=list)
     edge_avoidance_costs: List[Cost] = field(default_factory=list)
+    previous_solution_costs: List[Cost] = field(default_factory=list)
+    smoothness_costs: List[Cost] = field(default_factory=list)
     
     # Optimization results
     result: MathematicalProgramResult = None

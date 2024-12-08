@@ -48,7 +48,7 @@ def get_heightmap_with_holes(tmls):
                          elevation_map) / 5.0
 
     # Add random holes
-    num_holes = np.random.randint(5, 15)  # Random number of holes
+    num_holes = np.random.randint(10, 20)  # Random number of holes
     for _ in range(num_holes):
         hole_x = np.random.randint(0, grid_size)
         hole_y = np.random.randint(0, grid_size)
@@ -56,16 +56,12 @@ def get_heightmap_with_holes(tmls):
 
     return elevation_map
 
-
-
 def get_heightmap_stairs(tmls):
     grid_size = tmls.map_size
     elevation_map = np.zeros((grid_size, grid_size))
-
     step_height = 0.05
     middle_index = 3*(grid_size // 4)
-
     for i in range(middle_index, grid_size, 4):
-        elevation_map[:, i:i+4] = step_height * ((i - middle_index) // 4 + 1)
-
+        elevation_map[i:i+4, :] = step_height * ((i - middle_index) // 4 + 1)
     return elevation_map
+

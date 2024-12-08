@@ -4,7 +4,7 @@ from helpers import (
     get_num_contacts, get_stance_feet, get_contact_pairs, 
     evaluate_spline_position, evaluate_spline_acceleration, 
     evaluate_angular_momentum_derivative, evaluate_height_at_symbolic_xy, 
-    determinant
+    determinant, get_R_B
 )
 from pydrake.solvers import QuadraticConstraint
 
@@ -65,6 +65,11 @@ def add_dynamics_constraints(tmls: TAMOLSState):
         p_alr_at_des_pos = tmls.gait_pattern['at_des_position'][phase]
 
         eps = tmls.epsilon[phase]
+
+        tmls.prog.AddConstraint(eps >= 0)
+
+        weight = 1
+        tmls.prog.AddQuadraticCost(weight * eps * eps)
         
         for tau in np.linspace(0, T_k, tmls.tau_sampling_rate+1)[:tmls.tau_sampling_rate]:
             p_B = evaluate_spline_position(tmls, a_k, tau)[:3]
@@ -73,7 +78,7 @@ def add_dynamics_constraints(tmls: TAMOLSState):
             
             if N > 0: # Eq 17a: Friction cone constraint - FIXED
                 LHS = (mu * a_B[2])**2 - a_B[0]**2 - a_B[1]**2 
-                RHS = eps
+                RHS = 0
                 tmls.prog.AddConstraint(LHS >= RHS)
 
  
@@ -84,6 +89,8 @@ def add_dynamics_constraints(tmls: TAMOLSState):
                     p_j = tmls.p[j] if p_alr_at_des_pos[j] else tmls.p_meas[j]
                     p_ij = p_j - p_i
                     
+                    LHS = m * determinant(p_ij, p_B - p_i, a_B) - p_ij.dot(L_dot_B)
+                    RHS = eps 
                     LHS = m * determinant(p_ij, p_B - p_i, a_B) - p_ij.dot(L_dot_B)
                     RHS = eps 
 
@@ -101,16 +108,22 @@ def add_dynamics_constraints(tmls: TAMOLSState):
                 # 17c: Equality constraint
                 print(f"adding N={N} constraint 17c")
                 tmls.prog.AddConstraint(
-                    m * determinant(p_ij, p_B - p_i, a_B) == 
-                    p_ij.dot(L_dot_B)
+                    m * determinant(p_ij, p_B - p_i, a_B) - p_ij.dot(L_dot_B) <= eps
                 )
+                tmls.prog.AddConstraint(
+                    -(m * determinant(p_ij, p_B - p_i, a_B) - p_ij.dot(L_dot_B)) <= eps
+                )
+                
                 
                 # 17d: Moment constraint
                 # print(f"adding N={N} constraint 17d")
-                M_i = m * np.cross(p_B - p_i, a_B) - L_dot_B
+                g = np.array([0, 0, -9.81])
+                M_i = np.cross(p_B - p_i, g - a_B) - L_dot_B / m
                 cost = determinant(e_z, p_ij, M_i)
+                LHS = -cost
+                RHS = eps
                 
-                tmls.prog.AddConstraint(cost >= 0)
+                tmls.prog.AddConstraint(LHS <= RHS)
 
             # SKIP N < 2 CASES FOR NOW
 
@@ -122,26 +135,39 @@ def add_kinematic_constraints(tmls: TAMOLSState):
         for leg_idx in range(tmls.num_legs):
             if at_des_pos[leg_idx]:
 
+                a_k = tmls.spline_coeffs[phase_idx]
                 T_k = tmls.phase_durations[phase_idx]
                 
                 for tau in np.linspace(0, T_k, tmls.tau_sampling_rate+1)[:tmls.tau_sampling_rate]:
                     base_pos = evaluate_spline_position(tmls, tmls.spline_coeffs[phase_idx], tau)[0:3]
-                    diff = tmls.p[leg_idx] - base_pos
+                    phi_B = evaluate_spline_position(tmls, a_k, tau)[3:6]
 
-                    # difference vector should sit in a l_max ball (convex set)
-                    c =tmls.prog.AddQuadraticConstraint(
-                        diff.dot(diff),
-                        -np.inf,
-                        tmls.l_max**2
-                    )
-                    # if leg_idx == 1:
+                    R_B = get_R_B(phi_B)
+
+                    diff = base_pos + R_B @ tmls.hip_offsets[leg_idx]- tmls.p[leg_idx]
+                    total = diff.dot(diff)
+
+                    c = tmls.prog.AddConstraint(total <= tmls.l_max**2)
+                    tmls.kinematic_constraints.append(c)
+
+                    c = tmls.prog.AddConstraint(total >= tmls.l_min**2)
                     tmls.kinematic_constraints.append(c)
 
 
-                    # base pose should be l_min above the foot
-                    c = tmls.prog.AddLinearConstraint(
-                        base_pos[2] >= tmls.p[leg_idx][2] + .1 # TODO: REMOVE HARDCODE
-                    )
+                    # difference vector should sit in a l_max ball (convex set)
+                    # c =tmls.prog.AddQuadraticConstraint(
+                    #     diff.dot(diff),
+                    #     -np.inf,
+                    #     tmls.l_max**2
+                    # )
+                    # # if leg_idx == 1:
+                    # tmls.kinematic_constraints.append(c)
+
+
+                    # # base pose should be l_min above the foot
+                    # c = tmls.prog.AddLinearConstraint(
+                    #     base_pos[2] >= tmls.p[leg_idx][2] + .1 # TODO: REMOVE HARDCODE
+                    # )
                     # tmls.kinematic_constraints.append(c)
 
 def add_friction_cone_constraints(tmls: TAMOLSState):

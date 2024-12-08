@@ -19,7 +19,7 @@ def evaluate_spline_acceleration(tmls, coeffs, tau):
 def evaluate_angular_momentum_derivative(tmls, coeffs, tau):
     # Extract Euler angles, rates, and second derivatives
 
-    return np.zeros(3) # throwing error because the type is no longer symbolic.Expression (come back to this)
+    # throwing error because the type is no longer symbolic.Expression (come back to this)
     # NOTE: GPTed
     pos = evaluate_spline_position(tmls, coeffs, tau)               # [x, y, z, phi, theta, psi]
     vel = evaluate_spline_velocity(tmls, coeffs, tau)               # [vx, vy, vz, phi_dot, theta_dot, psi_dot]
@@ -37,8 +37,8 @@ def evaluate_angular_momentum_derivative(tmls, coeffs, tau):
     # omega_y = theta_dot * cos(phi) + psi_dot * sin(phi) * cos(theta)
     # omega_z = psi_dot * cos(phi)*cos(theta) - theta_dot * sin(phi)
     
-    sin_phi, cos_phi = np.sin(phi), np.cos(phi)
-    sin_theta, cos_theta = np.sin(theta), np.cos(theta)
+    sin_phi, cos_phi = sin(phi), cos(phi)
+    sin_theta, cos_theta = sin(theta), cos(theta)
 
     omega_x = phi_dot - psi_dot * sin_theta
     omega_y = theta_dot * cos_phi + psi_dot * sin_phi * cos_theta
@@ -69,14 +69,16 @@ def evaluate_angular_momentum_derivative(tmls, coeffs, tau):
                    - theta_ddot*sin_phi
                    - theta_dot*phi_dot*cos_phi)
 
+    # I = tmls.moment_of_inertia
     dot_omega = np.array([dot_omega_x, dot_omega_y, dot_omega_z])
+    # dot_omega = np.array([I[0] * dot_omega_x, I[1] * dot_omega_y, I[2] * dot_omega_z])
 
     # Compute angular momentum derivative
     # L = I * omega (for diagonal I)
     # L_dot = I * dot_omega + omega x (I * omega)
-    I = tmls.moment_of_inertia  # Should be an array like [I_x, I_y, I_z]
-    I_omega = I * omega
-    L_dot = I * dot_omega + np.cross(omega, I_omega)
+    I = tmls.moment_of_inertia  # Diagonal matrix
+    I_omega = I @ omega
+    L_dot = I @ dot_omega + np.cross(omega, I_omega)
 
     return L_dot
 
@@ -98,7 +100,7 @@ def get_stance_feet(tmls, phase):
 def evaluate_height_at_symbolic_xy(tmls, height_map, x, y):
     m, n = height_map.shape # NOTE: SHOULD BE SQUARE
     cell_size = tmls.cell_size
-    offset = tmls.cell_size * tmls.map_size / 2 # move zero to the center
+    offset = tmls.cell_size * tmls.map_size / 2.0 # move zero to the center
     i = (x + offset) / cell_size
     j = (y + offset) / cell_size
     total_height = 0
@@ -110,8 +112,14 @@ def evaluate_height_at_symbolic_xy(tmls, height_map, x, y):
                                                        height_map[k, l] * (1 - abs(i - k)) * (1 - abs(j - l)),
                                                          0), 
                                           0)
+            # partial_height = if_then_else(abs(i - k) < 1, height_map[k, l] * (1 - abs(i - k)) / (m), 0)
+            # partial_height = if_then_else(abs(i - k) < 1, 
+            #                               if_then_else(abs(j - l) < 1, 
+            #                                            height_map[k, l],
+            #                                              0), 
+            #                               0)
             total_height += partial_height
-
+            # total_height = 0.05
     return total_height
 
 
