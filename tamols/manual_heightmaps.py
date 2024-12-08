@@ -55,3 +55,17 @@ def get_heightmap_with_holes(tmls):
         elevation_map[hole_x, hole_y] = -drop_height
 
     return elevation_map
+
+
+
+def get_heightmap_stairs(tmls):
+    grid_size = tmls.map_size
+    elevation_map = np.zeros((grid_size, grid_size))
+
+    step_height = 0.05
+    middle_index = 3*(grid_size // 4)
+
+    for i in range(middle_index, grid_size, 4):
+        elevation_map[:, i:i+4] = step_height * ((i - middle_index) // 4 + 1)
+
+    return elevation_map
