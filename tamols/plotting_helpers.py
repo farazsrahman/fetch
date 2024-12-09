@@ -202,6 +202,90 @@ def plot_optimal_solutions_interactive(tmls: TAMOLSState, filepath='out/interact
     # Save as HTML file for interactive viewing
     fig.write_html(filepath)
 
+import matplotlib.pyplot as plt
+
+def plot_multiple_solutions_static(tmls_list: list, filepath='out/multiple_optimal_solutions.png'):
+    num_solutions = len(tmls_list)
+    fig, axes = plt.subplots(1, num_solutions, subplot_kw={'projection': '3d'}, figsize=(5 * num_solutions, 5))
+    
+    if num_solutions == 1:
+        axes = [axes]  # Ensure axes is iterable if there's only one plot
+
+    for idx, (tmls, ax) in enumerate(zip(tmls_list, axes)):
+        optimal_footsteps = tmls.optimal_footsteps
+        optimal_spline_coeffs = tmls.optimal_spline_coeffs
+        num_phases = tmls.num_phases
+        
+        # Plot initial foot positions (p_meas)
+        for i in range(tmls.p_meas.shape[0]):
+            ax.scatter(
+                tmls.p_meas[i, 0], 
+                tmls.p_meas[i, 1], 
+                tmls.p_meas[i, 2], 
+                color='black', 
+                s=50, 
+                label=f'p_meas {i+1}' if i == 0 else ""
+            )
+        
+        # Colors for alternating steps
+        colors = ['red', 'green', 'green', 'red']
+        
+        # Plot optimal footsteps
+        for i in range(optimal_footsteps.shape[0]):
+            ax.scatter(
+                optimal_footsteps[i, 0], 
+                optimal_footsteps[i, 1], 
+                optimal_footsteps[i, 2], 
+                color=colors[i % len(colors)], 
+                s=50, 
+                label=f'Footstep {i+1}' if i == 0 else ""
+            )
+        
+        # Plot lines between each adjacent footstep to indicate convex outline
+        edges = [(0, 1), (0, 2), (1, 3), (2, 3)]
+        for i, j in edges:
+            ax.plot(
+                [optimal_footsteps[i, 0], optimal_footsteps[j, 0]],
+                [optimal_footsteps[i, 1], optimal_footsteps[j, 1]],
+                [optimal_footsteps[i, 2], optimal_footsteps[j, 2]],
+                color='purple'
+            )
+        
+        # Plot splines for each phase
+        for phase_idx in range(num_phases):
+            T_k = tmls.phase_durations[phase_idx]
+            tau = np.linspace(0, T_k, tmls.tau_sampling_rate+1)
+            spline_positions = np.array([evaluate_spline_position(tmls, optimal_spline_coeffs[phase_idx], t) for t in tau])
+            
+            ax.plot(
+                spline_positions[:, 0], 
+                spline_positions[:, 1], 
+                spline_positions[:, 2], 
+                color='blue'
+            )
+        
+        # Plot height map
+        height_map = tmls.h
+        grid_size = height_map.shape[0]
+        boundary = grid_size * tmls.cell_size / 2
+        x = np.linspace(-boundary, boundary, grid_size)
+        y = np.linspace(-boundary, boundary, grid_size)
+        x, y = np.meshgrid(x, y, indexing='ij')
+        z = height_map
+
+        ax.plot_surface(x, y, z, cmap='viridis', alpha=0.7)
+        
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        ax.set_title(f'Solution {idx+1}')
+        ax.legend()
+    
+    plt.tight_layout()
+    plt.savefig(filepath)
+    plt.close()
+
+
 
 def save_optimal_solutions(tmls: TAMOLSState, filepath='out/optimal_solution.txt'):
     optimal_footsteps = tmls.optimal_footsteps
@@ -244,9 +328,9 @@ def save_optimal_solutions(tmls: TAMOLSState, filepath='out/optimal_solution.txt
             if i == num_phases - 1:
                 f.write(f"Phase {i+1} End Velocity:   {end_velocity_values[0]: >10.6f}, {end_velocity_values[1]: >10.6f}, {end_velocity_values[2]: >10.6f}, {end_velocity_values[3]: >10.6f}, {end_velocity_values[4]: >10.6f}, {end_velocity_values[5]: >10.6f}\n")
 
-        # VELOCITY
+        # movement cost/constraint
         f.write(f"\n\nReference Velocity: {tmls.ref_vel}\n")
-
+        f.write(f"\n\nReference Delta Position: {tmls.ref_del_pos}\n")
 
 
 

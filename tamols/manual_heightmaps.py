@@ -26,6 +26,11 @@ def get_platform_heightmap(tmls):
 
 def get_random_rough_heightmap(tmls):
     grid_size = tmls.map_size
+    
+    seed = np.random.randint(0, 10000)
+    np.random.seed(seed)
+    print(f"Random seed used: {seed}")
+    
     elevation_map = np.random.rand(grid_size, grid_size) * 0.05
 
     # Smooth the heightmap by averaging with neighbors
@@ -60,8 +65,7 @@ def get_heightmap_stairs(tmls):
     grid_size = tmls.map_size
     elevation_map = np.zeros((grid_size, grid_size))
     step_height = 0.05
-    middle_index = 3*(grid_size // 4)
+    middle_index = 5*(grid_size // 8)
     for i in range(middle_index, grid_size, 4):
         elevation_map[i:i+4, :] = step_height * ((i - middle_index) // 4 + 1)
     return elevation_map
-

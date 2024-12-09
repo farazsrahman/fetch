@@ -10,6 +10,29 @@ from helpers import (
 from pydrake.symbolic import floor, ExtractVariablesFromExpression, Expression
 from pydrake.solvers import QuadraticConstraint, Cost
 
+def add_tracking_constraint(tmls: TAMOLSState):
+    """Cost to ensure each spline ends ref_del_pos in front of where it began"""
+    print("Adding tracking constraint...") 
+
+    num_phases = len(tmls.phase_durations)
+    total_cost = 0
+
+    for phase in range(num_phases):
+        a_k = tmls.spline_coeffs[phase]
+        T_k = tmls.phase_durations[phase]
+
+        # Evaluate the start and end positions of the spline
+        start_pos = evaluate_spline_position(tmls, a_k, 0)[0:3]
+        end_pos = evaluate_spline_position(tmls, a_k, T_k)[0:3]
+
+        for dim in range(1):  # ONLY TRACK X POSITION
+            weight = 2 * T_k
+            # Ensure the end position is ref_del_pos in front of the start position
+            total_cost += weight * ((end_pos[dim] - start_pos[dim] - tmls.ref_del_pos[dim])**2)
+
+    c = tmls.prog.AddQuadraticCost(total_cost)
+    tmls.tracking_costs.append(c)
+
 def add_tracking_cost(tmls: TAMOLSState):
     """Cost to track reference trajectory"""
     print("Adding tracking cost...") 
@@ -107,7 +130,7 @@ def add_nominal_kinematic_cost(tmls: TAMOLSState):
     l_des = np.array([0., 0., tmls.h_des])
 
     num_phases = len(tmls.phase_durations)
-    for phase in range(num_phases):
+    for phase in [-1]:#range(num_phases): # only do the last phase (so all feet at des pos)
         a_k = tmls.spline_coeffs[phase]
         T_k = tmls.phase_durations[phase]
 
@@ -119,11 +142,12 @@ def add_nominal_kinematic_cost(tmls: TAMOLSState):
         stance_feet = get_stance_feet(tmls, phase)
         p_alr_at_des_pos = tmls.gait_pattern['at_des_position'][phase]
 
-        for i in stance_feet:
-            base_minus_leg = p_B + R_B.dot(tmls.hip_offsets[i]) - l_des
+        for i in range(4):
+            print(f"i: {i}")
+            base_minus_leg = p_B + R_B.dot(tmls.hip_offsets[i] * np.array([1.3, 1.7, 0])) - l_des
             p_i = tmls.p[i] if p_alr_at_des_pos[i] else tmls.p_meas[i]
             cost = np.dot(base_minus_leg - p_i, base_minus_leg - p_i)
-            weight = 7
+            weight = 20
             total_cost += weight * cost
 
     c = tmls.prog.AddCost(total_cost)

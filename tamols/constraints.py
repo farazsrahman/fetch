@@ -8,8 +8,8 @@ from helpers import (
 )
 from pydrake.solvers import QuadraticConstraint
 
-def add_initial_constraints(tmls: TAMOLSState, log: bool = False):
-    """Add initial and junction constraints on the spline coefficients"""
+def add_initial_constraints(tmls: TAMOLSState):
+    """Add initial constraints and save the binding for later removal."""
     print("Adding initial constraints...")
     if tmls.base_pose is None or tmls.p_meas is None or tmls.base_vel is None:
         raise ValueError("Initial state not set")
@@ -17,15 +17,28 @@ def add_initial_constraints(tmls: TAMOLSState, log: bool = False):
     # SPLINE INITIAL CONSTRAINTS
     a0 = tmls.spline_coeffs[0] 
     T0 = tmls.phase_durations[0]
+    
+    # Save bindings for later removal
+    tmls.initial_constraints = []
     for dim in range(tmls.base_dims):
-        tmls.prog.AddLinearConstraint(
-            a0[dim,0] == tmls.base_pose[dim]
+        binding_pose = tmls.prog.AddLinearConstraint(
+            a0[dim, 0] == tmls.base_pose[dim]
         )
-        tmls.prog.AddLinearConstraint(
-            a0[dim,1] == tmls.base_vel[dim]
+        binding_vel = tmls.prog.AddLinearConstraint(
+            a0[dim, 1] == tmls.base_vel[dim]
         )
+        tmls.initial_constraints.extend([binding_pose, binding_vel])
 
-    # SPLINE JUNCTION CONSTRAINTS
+def remove_initial_constraints(tmls: TAMOLSState):
+    """Remove the initial constraints using the saved bindings."""
+    print("Removing initial constraints...")
+    for binding in tmls.initial_constraints:
+        tmls.prog.RemoveConstraint(binding)
+    tmls.initial_constraints.clear()  # Clear the list after removal
+
+def add_junction_constraints(tmls: TAMOLSState):
+    """Add junction constraints for spline continuity."""
+    print("Adding junction constraints...")
     num_phases = len(tmls.phase_durations)
     for phase in range(num_phases - 1):
         ak = tmls.spline_coeffs[phase]      # Current phase
@@ -43,8 +56,6 @@ def add_initial_constraints(tmls: TAMOLSState, log: bool = False):
             vel_k = sum(i * ak[dim,i] * Tk**(i-1) for i in range(1, tmls.spline_order))   
             vel_k1 = ak1[dim,1]                                               # τ = 0
             tmls.prog.AddLinearConstraint(vel_k == vel_k1)
-
-    # NOTE: check if there need to be any intial conditions on feet
 
 def add_dynamics_constraints(tmls: TAMOLSState):
     """Add GIAC stability constraints at continuously sampled points"""
@@ -77,12 +88,14 @@ def add_dynamics_constraints(tmls: TAMOLSState):
             L_dot_B = evaluate_angular_momentum_derivative(tmls, a_k, tau)[0:3]
             
             if N > 0: # Eq 17a: Friction cone constraint - FIXED
+                print("adding N>0 constraint 17a")
                 LHS = (mu * a_B[2])**2 - a_B[0]**2 - a_B[1]**2 
                 RHS = 0
                 tmls.prog.AddConstraint(LHS >= RHS)
 
  
             if N >= 3: # Eq 17b: Multiple contact GIAC constraints
+                # print("adding N=3 constraint 17b")
                 for i, j in get_contact_pairs(tmls, stance_feet):
 
                     p_i = tmls.p[i] if p_alr_at_des_pos[i] else tmls.p_meas[i]
@@ -91,14 +104,13 @@ def add_dynamics_constraints(tmls: TAMOLSState):
                     
                     LHS = m * determinant(p_ij, p_B - p_i, a_B) - p_ij.dot(L_dot_B)
                     RHS = eps 
-                    LHS = m * determinant(p_ij, p_B - p_i, a_B) - p_ij.dot(L_dot_B)
-                    RHS = eps 
-
 
                     tmls.prog.AddConstraint(LHS <= RHS)
                 
                     
             if N == 2: 
+                raise ValueError("N=2 not supported")
+                print("adding N=2 constraint 17c,d")
                 # Eq 17c,d: Double support constraints
                 i, j = stance_feet
                 p_i = tmls.p[i] if p_alr_at_des_pos[i] else tmls.p_meas[i]
@@ -144,7 +156,7 @@ def add_kinematic_constraints(tmls: TAMOLSState):
 
                     R_B = get_R_B(phi_B)
 
-                    diff = base_pos + R_B @ tmls.hip_offsets[leg_idx]- tmls.p[leg_idx]
+                    diff = base_pos + R_B @ tmls.hip_offsets[leg_idx] - tmls.p[leg_idx]
                     total = diff.dot(diff)
 
                     c = tmls.prog.AddConstraint(total <= tmls.l_max**2)
@@ -188,38 +200,57 @@ def add_giac_constraints(tmls: TAMOLSState):
     """Enforce feet form a convex polygon"""
     print("Adding GIAC constraints...")
 
-    # Get the final foot locations
-    # p_1 = tmls.p_meas[0]
-    # p_2 = tmls.p_meas[1]
-    # p_3 = tmls.p_meas[2]
-    # p_4 = tmls.p_meas[3]
+    # Get the measured and planned foot locations
+    p_1_meas = tmls.p_meas[0]
+    p_2_meas = tmls.p_meas[1]
+    p_3_meas = tmls.p_meas[2]
+    p_4_meas = tmls.p_meas[3]
     p_1 = tmls.p[0]
     p_2 = tmls.p[1]
     p_3 = tmls.p[2]
     p_4 = tmls.p[3]
 
-    # Constraint (p12 × p13) z-component ≤ 0 for p_meas
+    # Final pose constraints (p1, p2, p3, p4)
     p_12 = p_2 - p_1
     p_13 = p_3 - p_1
     constraint_1 = tmls.prog.AddConstraint(p_12[0] * p_13[1] - p_12[1] * p_13[0] <= 0)
     tmls.giac_constraints.append(constraint_1)
 
-    # Constraint (p14 × p13) z-component ≤ 0 for p_meas
     p_14 = p_4 - p_1
     constraint_2 = tmls.prog.AddConstraint(p_14[0] * p_13[1] - p_14[1] * p_13[0] <= 0)
     tmls.giac_constraints.append(constraint_2)
 
-    # Constraint (p24 × p23) z-component ≤ 0 for p_meas
     p_23 = p_3 - p_2
     p_24 = p_4 - p_2
     constraint_3 = tmls.prog.AddConstraint(p_24[0] * p_23[1] - p_24[1] * p_23[0] <= 0)
     tmls.giac_constraints.append(constraint_3)
 
-    # Constraint (p24 × p21) z-component ≤ 0 for p_meas
     p_21 = p_1 - p_2
     constraint_4 = tmls.prog.AddConstraint(p_24[0] * p_21[1] - p_24[1] * p_21[0] <= 0)
     tmls.giac_constraints.append(constraint_4)
 
+    # # Intermediate pose constraints
+    # # Pose: p1_meas, p2, p3_meas, p4_meas
+    # p_12_meas = p_2 - p_1_meas
+    # p_13_meas = p_3_meas - p_1_meas
+    # constraint_5 = tmls.prog.AddConstraint(p_12_meas[0] * p_13_meas[1] - p_12_meas[1] * p_13_meas[0] <= 0)
+    # tmls.giac_constraints.append(constraint_5)
 
+    # p_14_meas = p_4_meas - p_1_meas
+    # constraint_6 = tmls.prog.AddConstraint(p_14_meas[0] * p_13_meas[1] - p_14_meas[1] * p_13_meas[0] <= 0)
+    # tmls.giac_constraints.append(constraint_6)
 
-    # TODO ADD GIAC CONSTRAINTS FOR INTERMEDIATE GAIT
+    # # Pose: p1_meas, p2, p3_meas, p4
+    # p_14 = p_4 - p_1_meas
+    # constraint_7 = tmls.prog.AddConstraint(p_14[0] * p_13_meas[1] - p_14[1] * p_13_meas[0] <= 0)
+    # tmls.giac_constraints.append(constraint_7)
+
+    # # Pose: p1_meas, p2, p4, p4_meas
+    # p_24_meas = p_4_meas - p_2
+    # constraint_8 = tmls.prog.AddConstraint(p_24[0] * p_24_meas[1] - p_24[1] * p_24_meas[0] <= 0)
+    # tmls.giac_constraints.append(constraint_8)
+
+    # # Pose: p1, p2, p3, p4_meas
+    # p_23_meas = p_3 - p_2
+    # constraint_9 = tmls.prog.AddConstraint(p_24_meas[0] * p_23_meas[1] - p_24_meas[1] * p_23_meas[0] <= 0)
+    # tmls.giac_constraints.append(constraint_9)

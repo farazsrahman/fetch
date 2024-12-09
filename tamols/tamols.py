@@ -15,7 +15,7 @@ class TAMOLSState:
 
     # Height map data
     cell_size: float = 0.05
-    map_size: int = 27
+    map_size: int = 61
     h: np.ndarray = None
     h_s1: np.ndarray = None
     h_s2: np.ndarray = None
@@ -28,7 +28,7 @@ class TAMOLSState:
 
     # Robot configuration
     num_legs: int = 4
-    spline_order: int = 5
+    spline_order: int = 4
     base_dims: int = 6
 
     # Physical parameters
@@ -78,6 +78,7 @@ class TAMOLSState:
     # Program Constraint Bindings
     test_constraints: List[Constraint] = field(default_factory=list)
     initial_constraints: List[Constraint] = field(default_factory=list)
+    junction_constraints: List[Constraint] = field(default_factory=list)
     dynamics_constraints: List[Constraint] = field(default_factory=list)
     kinematic_constraints: List[Constraint] = field(default_factory=list)
     giac_constraints: List[Constraint] = field(default_factory=list)
@@ -103,6 +104,7 @@ class TAMOLSState:
     desired_height: float = 0.4
 
     ref_vel: np.ndarray = None
+    ref_del_pos: np.ndarray = None
     ref_angular_momentum: np.ndarray = None
     gait_pattern: Dict[str, List[Union[float, List[int]]]] = None
     num_phases: int = None # setup by setup_variables
